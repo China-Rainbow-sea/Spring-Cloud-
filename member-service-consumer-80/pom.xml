@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <!--    parent 父项目/模块内容-->
+    <parent>
+        <artifactId>e-commerce-center</artifactId>
+        <groupId>com.rainbowsea</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>member-service-consumer-80</artifactId>
+
+    <!--    引入相关的依赖：我们引入了当前所需要的依赖，后面如果有其它的需要，再灵活添加-->
+    <dependencies>
+        <!--        引入 web-starter 说明：我们使用版本仲裁(从父项目继承了版本)-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+
+        <!--1. starter-actuator 是sprng boot 程序的监控系统,可以实现健康检查,info 信息等
+         2. 访问http://localhost:10000/actuator 可以看到相关链接,还可以做相关配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+
+        <!--        lombok 引入-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <optional>true</optional>
+        </dependency>
+
+        <!--        引入 test-starter -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+
+
+    </dependencies>
+</project>

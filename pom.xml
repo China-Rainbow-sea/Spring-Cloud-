@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>com.rainbowsea</groupId>
+    <artifactId>e-commerce-center</artifactId>
+    <version>1.0-SNAPSHOT</version>
+    <!--    对于该父模块下的,对应的子模块 module 内容-->
+    <!--    列出了父项目/父工程聚合管理的子模块/子项目-->
+    <modules>
+        <module>member-service-provider-10000</module>
+        <module>member-service-consumer-80</module>
+    </modules>
+    <!--    表明这是一个父工程,聚合管理其它模块-->
+    <packaging>pom</packaging>
+
+    <name>e-commerce-center Maven Webapp</name>
+    <!-- FIXME change it to the project's website -->
+    <url>http://www.example.com</url>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+        <!--        在父项目当中:定义版本仲裁-->
+        <junit.version>4.12</junit.version>
+        <!--    说明: 使用最新版本 log4j ,防止安全漏洞-->
+        <log4j.version>2.17.2</log4j.version>
+        <lombok.version>1.18.20</lombok.version>
+        <!--    老师的 5.1.47  本电脑安装的是   8.0.26-->
+        <mysql.version>8.0.26</mysql.version>
+        <druid.version>1.1.17</druid.version>
+        <mybatis.spring.boot.version>2.2.0</mybatis.spring.boot.version>
+    </properties>
+
+    <!--  <dependencyManagement> 配置各个依赖和版本
+       子模块继承后,锁定版本,子模块不用再写 version 了
+       需要注意的一点是: 这里的依赖的 jar 并没有引入到项目当中,仅仅这是一个声明而已
+        <dependencyManagement> 里只是声明依赖，并不实现引入，因此子项目需要显示的声明需要的依赖 -->
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-dependencies</artifactId>
+                <version>2.2.2.RELEASE</version>
+                <!--
+                 1.type:pom 和 scope: import 配合使用
+                 2.表示父项目的子模块,在引入 springboot 相关依赖时,锁定版本为 2.2.2.RELEASE
+                 3.通过 pom + import 解决maven单继承机制
+                 4. 子模块之间可以多继承-->
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--            配置 Spring Cloud-->
+            <dependency>
+                <groupId>org.springframework.cloud</groupId>
+                <artifactId>spring-cloud-dependencies</artifactId>
+                <version>Hoxton.SR1</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--            配置 Spring Cloud Alibaba-->
+            <dependency>
+                <groupId>com.alibaba.cloud</groupId>
+                <artifactId>spring-cloud-alibaba-dependencies</artifactId>
+                <version>2.1.0.RELEASE</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+
+            <!--            mysql 数据库-->
+            <dependency>
+                <groupId>mysql</groupId>
+                <artifactId>mysql-connector-java</artifactId>
+                <!--             ${mysql.version} 锁定引用上面<mysql.version>标签配置的版本信息 -->
+                <version>${mysql.version}</version>
+            </dependency>
+
+            <!--            druid 数据库连接池-->
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>druid</artifactId>
+                <version>${druid.version}</version>
+            </dependency>
+
+            <!--            spring boot -->
+            <dependency>
+                <groupId>org.mybatis.spring.boot</groupId>
+                <artifactId>mybatis-spring-boot-starter</artifactId>
+                <version>${mybatis.spring.boot.version}</version>
+            </dependency>
+
+            <!--       log4j 日志     -->
+            <dependency>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j</artifactId>
+                <version>${log4j.version}</version>
+            </dependency>
+
+            <!--            junit 配置-->
+            <dependency>
+                <groupId>junit</groupId>
+                <artifactId>junit</artifactId>
+                <version>${junit.version}</version>
+            </dependency>
+
+
+            <!--            lombok 配置-->
+            <dependency>
+                <groupId>org.projectlombok</groupId>
+                <artifactId>lombok</artifactId>
+                <version>1.18.20</version>
+            </dependency>
+
+        </dependencies>
+    </dependencyManagement>
+</project>

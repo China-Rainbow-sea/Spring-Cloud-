@@ -1,0 +1,6 @@
+server:
+  port: 80 # 浏览器默认就是 80 端口
+
+spring:
+  application:
+    name: member-service-consumer-80 # 该项目/模块名称
