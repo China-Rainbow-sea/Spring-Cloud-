@@ -11,3 +11,20 @@ spring:
 mybatis:
   mapper-locations: classpath:mapper/*.xml # 指定 mapper.xml 文件位置 classpath 表示 resources 目录下
   type-aliases-package: com.rainbowsea.springcloud.entity # 实例 bean 类所在的包,这样可以通过类名的方式
+
+# 配置 eureka-client
+eureka:
+  client:
+    register-with-eureka: true # 表示将自己注册到 Eureka-Server
+    # 表示从 Eureka-Server 抓取注册信息
+    # 如果是单节点，是可以配置的，但是如果是一个集群，则必须配置true
+    # 才能配合 Ribbon 使用负载均衡
+    fetch-registry: true
+    service-url:
+      # 表示将自己注册到那个 eureka-server
+      defaultZone: http://localhost:9001/eureka
+  instance:
+    # 客户端向服务端发送心跳的时间间隔为 1s (默认是30s)
+    lease-renewal-interval-in-seconds: 1
+    # 时间单位(秒)，默认是 90s，超时将剔除服务
+    lease-expiration-duration-in-seconds: 2

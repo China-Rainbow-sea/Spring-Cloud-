@@ -4,3 +4,11 @@ server:
 spring:
   application:
     name: member-service-consumer-80 # 该项目/模块名称
+
+eureka:
+  client:
+    register-with-eureka: true # 表示将自己注册到 Eureka-Server 当中
+    fetch-registry: true # 表示将信息发送到 Eureka-Server 当中
+    service-url:
+      # 表示将自己注册到那个 eureka-server
+      defaultZone: http://localhost:9001/eureka

@@ -92,5 +92,3 @@ public class Result<T> implements Serializable {
     }
 }
 
-
-

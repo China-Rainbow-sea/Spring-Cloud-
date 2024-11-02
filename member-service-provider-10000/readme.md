@@ -20,7 +20,7 @@ INSERT INTO member VALUES
 SELECT * FROM member
 
 ```
-
+# 后续的添加的用户的密码都是：123
 
 # 注意事项和细节
 1. 如果前端是以表单形式提交了/是以 parameters，则不需要使用@RequestBody，才会进行对象 bean参数的封装，

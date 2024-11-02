@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <parent>
+        <artifactId>e-commerce-center</artifactId>
+        <groupId>com.rainbowsea</groupId>
+        <version>1.0-SNAPSHOT</version>
+    </parent>
+    <modelVersion>4.0.0</modelVersion>
+
+    <artifactId>e_commerce_center-common-api</artifactId>
+
+    <!--    引入公共模块需要的依赖-->
+    <dependencies>
+        <!--  lombok 配置-->
+        <dependency>
+            <groupId>org.projectlombok</groupId>
+            <artifactId>lombok</artifactId>
+            <!--
+                                 <optional>true</optional>
+                    1. true 表示两个项目之间依赖不传递
+                    2. 大家可以理解 <optional>true</optional>：防止经该依赖传递到其它模块中
+                    说的再具体一些，比如: member-service-consumer-80 模块依赖了本项目
+               ，那么本项目不会把 lombok 传递给 member-service-consumer-80
+                    3. 不设置 optional 或者 optional 是 false ，表示传递依赖
+            -->
+            <optional>true</optional>
+        </dependency>
+    </dependencies>
+
+
+</project>

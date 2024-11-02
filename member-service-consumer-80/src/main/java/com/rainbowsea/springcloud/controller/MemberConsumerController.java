@@ -33,8 +33,9 @@ public class MemberConsumerController {
         // 表示你向将该请求，发送给那个微服务处理，注意无论是返回值，还是参数， @PostMapping() 请求方式都要一一对应上对应处理的微服务上的内容
         //2. 第2个参数: member : 就是通过 restTemplate 发出的 post 请求携带数据或者对象
         //3. 第3个参数: Result.class ，微服务当中的对应处理的方法的，返回值，也就是返回对象类型
-
         // 注意：坑点
+        // 这里通过 restTemplate 调用服务模块的接口，就是一个远程调用
+        //
         log.info("member-service-consumer-80 save member={}", member);
         return restTemplate.postForObject
                 (MEMBER_SERVICE_PROVIDER_URL + "/member/save", member, Result.class);
@@ -63,8 +64,10 @@ public class MemberConsumerController {
      */
     @GetMapping("/member/consumer/get/{id}")
     public Result<Member> getMemberById(@PathVariable("id") Long id) {
+
         // 这里就用两个参数
         // 第一个参数，因为是查询，所以这里我们直接字符串拼接上去
+        // 这里通过
         return restTemplate.getForObject(MEMBER_SERVICE_PROVIDER_URL + "/member/get/" + id, Result.class);
     }
 
