@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?> <!-- 这句不要动,表示xml的版本,以及读取的编码 -->
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rainbowsea.springcloud.dao.MemberDao">
+    <!--    配置实现 queryMemberById-->
+    <!--
+        1.这里可以使用 resultType="Member"
+        2.当然也可以使用 resultMap="自定义的resultMap",这里我们使用resultMap
+    -->
+
+    <resultMap id="BaseResultMap" type="com.rainbowsea.springcloud.entity.Member">
+        <id column="id" property="id" jdbcType="BIGINT"></id>
+        <id column="name" property="name" jdbcType="VARCHAR"></id>
+        <id column="pwd" property="pwd" jdbcType="VARCHAR"></id>
+        <id column="mobile" property="mobile" jdbcType="VARCHAR"></id>
+        <id column="email" property="email" jdbcType="VARCHAR"></id>
+        <id column="gender" property="gender" jdbcType="TINYINT"></id>
+    </resultMap>
+    <!--实现查询-->
+    <select id="queryMemberById" parameterType="Long" resultMap="BaseResultMap">
+        select * from `member` where `id`=#{id}
+    </select>
+    <!--    实际开发中,我们使用的是 mybatis,还是 mybatis-plus 两者都要会-->
+    <!--  useGeneratedKeys="true" keyProperty="id" 表示如果插入的表id 以自证列为主键,那么允许jdbc自动生成主键,并可将
+      自动生成的主键id返回,注意:useGeneratedKeys="true" 只针对 insert 语句生效, 默认为 false-->
+    <insert id="save" parameterType="member" useGeneratedKeys="true" keyProperty="id">
+        insert into member(`NAME`,`pwd`,`mobile`,`email`,`gender`)
+        values(#{name}, md5(#{pwd}), #{mobile},#{email}, #{gender});
+    </insert>
+</mapper>

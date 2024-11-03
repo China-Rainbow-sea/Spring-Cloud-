@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>e-commerce-eureka-server-9001</artifactId>
+    <artifactId>member-service-provider-10002</artifactId>
 
 
     <dependencies>
@@ -19,34 +19,46 @@
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
-        <!--1. starter-actuator 是spring boot 程序的监控系统,可以实现健康检查,info 信息等
-           2. 访问http://localhost:9001/actuator 可以看到相关链接,还可以做相关配置-->
+        <!--1. starter-actuator 是sprng boot 程序的监控系统,可以实现健康检查,info 信息等
+            2. 访问http://localhost:10002/actuator 可以看到相关链接,还可以做相关配置-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
-        <!-- 引入 eureka-server 场景启动器 starter: 使用版本仲裁
-          注意：不要搞错了，有一个 starter 的
-
-         -->
+        <!--        引入 mybatis-starter 整合到 springboot 当中-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-server</artifactId>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <!--  这里我们重新指定一下 version 版本,因为父项目当中没有-->
+            <version>1.1.13</version>
+        </dependency>
+
+        <!--        引入 mysql依赖,使用版本仲裁-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <!--      spring-boot-starter-jdbc 引入  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
         </dependency>
 
         <!--        lombok 引入-->
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <!--            不进行转递依赖-->
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-        </dependency>
 
         <!--        引入 test-starter -->
         <dependency>
@@ -62,7 +74,11 @@
             <version>${project.version}</version>
         </dependency>
 
-
+        <!-- 引入 eureka-client 依赖  -->
+        <!--        注意：存在一个 starter 不要选错了-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
+        </dependency>
     </dependencies>
-
 </project>

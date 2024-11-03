@@ -13,7 +13,7 @@ import javax.annotation.Resource;
 @SpringBootTest // 如果指明的路径不同;要加上注解指明(场景启动的所在包路径)// 同时一定要有场景启动器注解
 // 如果不想把测试类放到和启动类相同的包下，那就给测试类的注解加上@SpringBootTest(classes = {springbootJpaApplication.class}) 代
 @Slf4j
-public class MemberApplicationTest {
+public class MemberApplication10000Test {
 
     @Resource
     private MemberDao memberDao;

@@ -41,7 +41,7 @@ public class MemberController {
         // 这里我们使用 RestTemplate 传输发送的数据格式是以 json 格式的所以要添加撒谎给你 @RequestBody
         // 将json 格式的字符串转换为 bean对象进行赋值
         // 同时，我们 bean 对象传输过程中是需要序列化的。
-        log.info("member-service-provider-10000 save member={}", member);
+        log.info("member-service-provider-10002 save member={}", member);
         int affected = memberService.save(member);
         if (affected > 0) { // 说明添加成功
             return Result.success("添加会员成功", affected);
@@ -63,9 +63,9 @@ public class MemberController {
 
         // 使用 Result 把查询到的结果返回
         if (member != null) {
-            return Result.success("查询会员成功 member-service-provider-10000 ", member);
+            return Result.success("查询会员成功 member-service-provider-10002 ", member);
         } else {
-            return Result.error("402", "ID" + id + "不存在 member-service-provider-10000 ");
+            return Result.error("402", "ID" + id + "不存在 member-service-provider-10002  ");
         }
     }
 

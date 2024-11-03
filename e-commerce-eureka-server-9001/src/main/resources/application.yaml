@@ -3,7 +3,7 @@ server:
 # 配置 eureka-server
 eureka:
   instance:
-    hostname: localhost # 服务实例名或者别名
+    hostname: eureka9001.com # 服务实例名或者别名
   client:
     # 配置不向注册中心注册自己,默认是 true
     register-with-eureka: false
@@ -12,7 +12,8 @@ eureka:
     service-url:
       #设置与 eureka server 交互的模块,查询服务和注册服务都需要依赖这个地址
       #      defaultZone: http://localhost:9001/eureka/ ,也可以使用别名，在同一个文件当中可以引用
-      defaultZone: http://${eureka.instance.hostname}:${server.port}/eureka/
+      # 相互注册，这里应用注册到 eureka server 9002 上
+      defaultZone: http://eureka9002.com:9002/eureka/
 
   # 自我保护测试：下面两个设置，记得测试完要注释掉
 #  server:

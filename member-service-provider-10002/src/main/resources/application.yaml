@@ -1,5 +1,5 @@
 server:
-  port: 10000
+  port: 10002
 spring:
   application:
     name: member-service-provider # 配置应用的名称

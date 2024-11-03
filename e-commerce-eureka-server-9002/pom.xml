@@ -9,7 +9,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>e-commerce-eureka-server-9001</artifactId>
+    <artifactId>e-commerce-eureka-server-9002</artifactId>
 
 
     <dependencies>
@@ -20,7 +20,7 @@
         </dependency>
 
         <!--1. starter-actuator 是spring boot 程序的监控系统,可以实现健康检查,info 信息等
-           2. 访问http://localhost:9001/actuator 可以看到相关链接,还可以做相关配置-->
+           2. 访问http://localhost:9002/actuator 可以看到相关链接,还可以做相关配置-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
@@ -64,5 +64,6 @@
 
 
     </dependencies>
+
 
 </project>

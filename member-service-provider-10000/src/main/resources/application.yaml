@@ -2,7 +2,7 @@ server:
   port: 10000
 spring:
   application:
-    name: member-service-provider-10000 # 配置应用的名称
+    name: member-service-provider # 配置应用的名称
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource # 配置 alibaba 的数据库连接池
     password: MySQL123
@@ -15,14 +15,15 @@ mybatis:
 # 配置 eureka-client
 eureka:
   client:
-    register-with-eureka: true # 表示将自己注册到 Eureka-Server
+    register-with-eureka: true # 示将自己注册到 Eureka-Server,因为自己是作为 eureka-client客户端的角色的
     # 表示从 Eureka-Server 抓取注册信息
     # 如果是单节点，是可以配置的，但是如果是一个集群，则必须配置true
     # 才能配合 Ribbon 使用负载均衡
     fetch-registry: true
     service-url:
       # 表示将自己注册到那个 eureka-server
-      defaultZone: http://localhost:9001/eureka
+      # 将本微服务注册到多个 eureka - server 当中，使用逗号间隔即可
+      defaultZone: http://eureka9001.com:9001/eureka/,http://eureka9002.com:9002/eureka/
       # eureka 自我保护模式测试
 #  instance:
 #    # 客户端向服务端发送心跳的时间间隔为 1s (默认是30s)

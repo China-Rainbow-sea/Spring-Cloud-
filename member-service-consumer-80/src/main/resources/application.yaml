@@ -5,10 +5,13 @@ spring:
   application:
     name: member-service-consumer-80 # 该项目/模块名称
 
+# 配置 eureka client 注意，因为这里该模块是作为 client 客户端的角色的，所有要将自己client的信息发送给 Server 当中去的
 eureka:
   client:
     register-with-eureka: true # 表示将自己注册到 Eureka-Server 当中
     fetch-registry: true # 表示将信息发送到 Eureka-Server 当中
     service-url:
       # 表示将自己注册到那个 eureka-server
-      defaultZone: http://localhost:9001/eureka
+      #      defaultZone: http://localhost:9001/eureka
+      # 将本微服务注册到多个 eureka - server 当中，使用逗号间隔即可
+      defaultZone: http://eureka9001.com:9001/eureka/,http://eureka9002.com:9002/eureka/
