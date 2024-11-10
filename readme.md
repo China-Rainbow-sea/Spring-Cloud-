@@ -200,3 +200,147 @@ Eureka 停更说明: https://github.com/Netflix/eureka/wiki
 Spring Cloud Alibaba
 4. 虽然 Eureka 停更，目前用的不多，但是它的服务注册和发现均衡负载的思想是优先
 的，有了Eureka的基础，我们学习Spring Cloud Alibaba Nacos会轻松很多
+
+
+# Ribbon 是什么
+1.Spring Cloud Ribbon 是基于Netflix Ribbon 实现的一套客户端，负载均衡的工具
+2.Ribbon 主要功能是提供客户端负载均衡算法和服务调用
+3.Ribbon 客户端组件提供一系列完善的配置项如“连接超时，重试”
+4.Ribbon 会基于某种规则（如简单轮询，随机连接等）去连接指定服务
+5.程序员很容易是由 Ribbon 的负载均衡算法实现负载均衡
+6.一句话: Ribbon: 负载均衡 + RestTemplate 调用
+Ribbon 的官网地址:  https://github.com/Netflix/ribbon
+
+## Ribbon 进入维护状态
+
+Ribbon 目前进入维护模式，未来替换方案是 Spring Cloud LoadBalancer
+
+# LB 分类
+1. 集中式: LB
+* 即在服务的消费方和提供方之间使用独立的LB设施(可以是硬件，如F5，也可以是软件，如 Nginx)
+由该设施负责把访问请求通过某种策略转发至服务的提供方
+* LB(Load Balance 负载均衡)
+2. 进程内LB
+* 将 LB逻辑集成到消费方，消费方服务注册中心获知有哪些地址可用，然后再从这些地址中选择
+一个合适的服务地址
+* Ribbon 就属于进程内LB，它只是一个类库，集成于消费方进程，消费方通过它来获取到服务提供方的地址。
+
+# Ribbon 常见负载算法
+> Ribbon 机制
+> 1. 先选择 EurekaServer ，它的优先选择在同一个区域内负载较少的 server
+> 2. 再根据用户指定的策略，在从server 取到的服务注册列表中选择一个地址
+> 3. Ribbon 提供了多种策略，比如：轮询，随机和根据响应时间加权。
+* RandomRule 随机选择一个Server，在index 上随机，选择index对应位置的 server
+* RoundRobinRule 轮询index，选择index 对应位置的server
+
+
+# OpenFeign 是什么
+1. OpenFeign 是个声明式 WebService 客户端，使用OpenFeign 让编写Web Service客户端更简单
+2. 它的使用方法是定义一个服务接口然后在上面添加注解
+3. OpenFeign 也支持可插拔式的编码器和解码器
+4. Spring Cloud 对OpenFeign 进行了封装使其支持了Spring MVC 标注注解和HttpMessageConverters
+5. OpenFeign 可以与 Eureka 和 Ribbon 组合使用以支持负载均衡
+官网地址： https://github.com/spring-cloud/spring-cloud-openfeign
+**简单的说：就是一个远程服务登录访问的，转发的一个组件，可以实现Server 集群之间的相互注册通信** 
+
+
+# Feign 和 OpenFeign 区别
+Feign 
+* Feign 是Spring Cloud 组件中的一个轻量级 RESTful的HTTP服务客户端
+* Feign 内置了Ribbon ，用来做客户端负载均衡，去调用服务注册中心的服务
+* Feign 的使用方式是: 使用Feign的注解定义接口，调用服务注册中心的服务。
+* Feign 支持的注解和用法参考官方文档: https://github.com/OpenFeign/feign
+* Feign 本身**不支持Spring MVC的注解** ，它有一套自己的注解
+* 引入依赖:
+```
+xml
+<dependency>
+    <groupId>org.springframework.cloud</groupId>
+    <artifactId>spring-cloud-starter-openfeign</artifactId>
+</dependency>
+
+```
+**OpenFeign** 
+* OpenFeign 是 Spring Cloud 在 **Feign的基础上支持了Spring MVC 的注解，如 @RequestMapping等等
+* OpenFeign 的 @FeignClient 可以解析Spring MVC 的 @RequestMapping注解下的接口
+* OpenFeign 通过动态代理的方式产生实现类，实现类中做负载均衡并调用其他服务。
+引入依赖:
+```
+xml
+   <!--  引入 openfeign -->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
+```
+**精简一句话: OpenFeign 就是在 Feign基础上做了加强，有些程序员为了方便，说Feign就是OpenFeign
+
+# 补充: spring-boot-starter-actuator  是spring boot 程序的监控系统,可以实现健康检查
+```
+xml
+
+        <!--1. starter-actuator 是spring boot 程序的监控系统,可以实现健康检查,info 信息等
+         2. 访问http://localhost:10000/actuator 可以看到相关链接,还可以做相关配置-->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+```
+
+## Openfeign 的使用的特点：微服务接口+@FeignClient,使用接口进行解耦(简单的说:就是使用接口调用对应 provider 提供服务的集群)
+
+@FeignClient(value = "MEMBER-SERVICE-PROVIDER")  // 这个 value 值就是,对应我们想要访问的 provider(提供服务/服务集群)的 name 名称
+所以：注意不要将提供注册的名称，写错了
+* 接口方法上的: value 是不能乱写的，远程调用的url为 : 对应你想要调用哪个 provider 名称的别名/名称 http://MEMBER-SERVICE-PROVIDER/member/get/{id}
+* 接口上的方法，也必须与调用的 provider 当中的方法保持一致: 
+```
+java
+
+@GetMapping(value = "/member/get/{id}")
+public Result<Member> getMembertById(@PathVariable("id") Long id);
+
+```
+
+## 日志配置
+1. 说明 Feign 提供了日志打印功能，可以通过配置来调整日志级别，从面对 Feign 接口的调用情况进行监控和输出
+1. 日志级别:
+> 1. NONE: 默认的，不显示任何日志
+> 2. BASIC: 仅记录请求方式，URL,响应状态码及执行时间
+> 3. HEADERS:除了 BASIC 中定义的信息之外，还有请求和响应的头信息
+> 4. FULL: 除了HEADERS 中定义的信息之外，还有请求和响应的正文及元数据
+
+> 常见的日志级别有 5 种，分别是 error、warn、info、debug、trace
+  error：错误日志，指比较严重的错误，对正常业务有影响，需要运维配置监控的；
+  warn：警告日志，一般的错误，对业务影响不大，但是需要开发关注；
+  info：信息日志，记录排查问题的关键信息，如调用时间、出参入参等等；
+  debug：用于开发 DEBUG 的，关键逻辑里面的运行时数据；
+  trace：最详细的信息，一般这些信息只记录到日志文件中。
+
+**测试：最后：别忘了，撤销测试日志配置**
+
+## OpenFeign 超时
+ 在两个 10000/10002 添加上模拟超时，
+```
+java
+/模拟超时，这里暂停 5 秒
+try {
+TimeUnit.SECONDS.sleep(5);
+ } catch (Exception e) {
+e.printStackTrace();
+}
+
+```
+
+**测试效果:**
+> 浏览器显示: Read timed out executing GET http://MEMBER-SERVICE-PROVIDER/member/get/1
+> IDEA后端显示: java.net.SocketTimeoutException: Read timed out
+>Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Request processing failed; nested exception is feign.RetryableException: Read timed out executing GET http://MEMBER-SERVICE-PROVIDER/member/get/1] with root cause
+>
+
+配置超时时间: 在 application.yaml 当中配置
+```
+yaml
+
+
+```

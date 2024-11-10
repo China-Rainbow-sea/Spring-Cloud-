@@ -1,0 +1,30 @@
+server:
+  port: 80
+spring:
+  application:
+    name: member-service-consumer-openfeign-80
+
+# 配置 eureka client 注意，因为这里该模块是作为 client 客户端的角色的，所有要将自己client的信息发送给 Server 当中去的
+eureka:
+  client:
+    register-with-eureka: true # 表示将自己注册到 Eureka-Server 当中
+    fetch-registry: true # 表示将信息发送到 Eureka-Server 当中
+    service-url:
+      # 表示将自己注册到那个 eureka-server
+      #      defaultZone: http://localhost:9001/eureka
+      # 将本微服务注册到多个 eureka - server 当中，使用逗号间隔即可
+      defaultZone: http://eureka9001.com:9001/eureka/,http://eureka9002.com:9002/eureka/
+
+logging:
+  level:
+    # 对 MemberFeignService 接口调用过程打印信息-Debug
+    com.rainbowsea.springcloud.service.MemberFeignService: debug
+
+# OpenFeign 超时
+ribbon:
+#  #设置 feign 客户端超时时间（openFeign 默认支持 ribbon) #指的是建立连接后从服务器读取到可用资源所用的时间，
+#  #时间单位是毫秒
+  ReadTimeout: 8000
+#  #指的是建立连接所用的时间，适用于网络状况正常的情况下，
+#  #两端连接所用的时间
+  ConnectTimeout: 8000
