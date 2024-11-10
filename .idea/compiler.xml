@@ -10,6 +10,7 @@
         <module name="e-commerce-eureka-server-9002" />
         <module name="e-commerce-eureka-server-9001" />
         <module name="member-service-provider-10000" />
+        <module name="member-service-consumer-openfeign-80" />
         <module name="member-service-consumer-80" />
         <module name="member-service-provider-10002" />
         <module name="e_commerce_center-common-api" />
