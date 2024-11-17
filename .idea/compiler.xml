@@ -13,6 +13,7 @@
         <module name="member-service-consumer-80" />
         <module name="e-commerce-eureka-server-9001" />
         <module name="member-service-provider-10000" />
+        <module name="e-commerce-gateway-20000" />
         <module name="e_commerce_center-common-api" />
       </profile>
     </annotationProcessing>

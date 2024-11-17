@@ -1,0 +1,55 @@
+server:
+  port: 20000
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          # gateway 最终访问的url是 url=url+Path
+          # 匹配后提供服务的路由地址:也可以是外网 http://www.baidu.com
+          # 这里我们匹配为一个 localhost:10000 服务即可
+          # 比如: 客户端/浏览器请求: url http://localhost:20000/member/get/1
+          # 如果根据Path匹配成功，最终访问的url/转发url就是 url=http://localhost:10000/member/get/1
+          # 如果匹配失败，则有 gateway 返回 404信息
+          # 疑问: 这里老师配置的 url 是固定的，在当前这种情况其实可以不是有 Eureka Server,
+          # 后面老师会使用灵活配置的方式，配置，就会使用 Eureka Server
+          # 注意：当这里我们仅仅配置了一个url 的时候，就只会将信息转发到这个10000服务端，为我们处理业务，
+          # 一个服务就没有(轮询)的负载均衡了
+          #          uri: http://localhost:10000
+          # 将查询服务，配置为动态的服务(轮询)负载均衡
+          # 1. lb: 协议名, member-service-provider 注册到eureka server服务名(小写)
+          # 2. 默认情况下，负载均衡算法是轮询
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+        - id: member_route02 # 路由的id,程序员自己配置，要求"唯一"
+          #          uri: http://localhost:10000
+          # 配置(轮询负载均衡)动态调用服务器
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            # 这时如果客户端/浏览器 访问 gateway 的url http://localhost:20000/member/save
+            # 匹配Path成功 最终访问的url就是 ； http://localhost:10000/member/save 给对对应配置转发的10000服务处理了
+            - Path=/member/save
+        # 配置为,访问百度的网址，注意看这里，我们的 path 是 / ，也就是首页，不写任何的信息内容
+#        - id: member_route03 # 路由的id,程序员自己配置，要求"唯一"
+#          uri: http://www.baidu.com
+#          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+#            - Path=/
+
+# 配置 Eureka-Client
+eureka:
+  instance:
+    hostname: e-commerce-service
+  client:
+    register-with-eureka: true # 将自己注册到 Eureka-Server 注册中心当中
+    fetch-registry: true
+    service-url:
+      # 表示将自己注册到哪个 eureka-server
+      # 这里我们将本微服务注册到EurekaServer 集群,使用","逗号间隔
+      # 这里为了方便，使用 Eureka Server 的单个服务环境进行测试，不采用集群的方式
+      defaultZone: http://eureka9001.com:9001/eureka/

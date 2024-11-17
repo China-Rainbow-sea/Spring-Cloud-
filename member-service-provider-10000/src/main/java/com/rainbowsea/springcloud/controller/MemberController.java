@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import java.util.concurrent.TimeUnit;
 
 @RestController
 @Slf4j
@@ -64,11 +63,11 @@ public class MemberController {
 
 
         // 模拟超时 ,这里暂停 5秒
-        try {
+       /* try {
             TimeUnit.SECONDS.sleep(5);
         } catch (Exception e) {
             e.printStackTrace();
-        }
+        }*/
 
         // 使用 Result 把查询到的结果返回
         if (member != null) {

@@ -344,3 +344,244 @@ yaml
 
 
 ```
+
+
+
+# Gateway 是什么
+1. Gateway 是Spring 生态系统之上构建的 API 网关服务，基于 Spring ,Spring Boot 和 Project Reactor 等技术。
+2. GateWay 旨在提供一种简单而有效的方式来对 API 进行路由，以及提供一些强大的过滤器功能，例如：熔断，限流，重试等
+官方地址: https://spring.io/projects/spring-cloud-gateway
+https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/how-it-works.html
+
+## Gateway 核心功能:
+> 1. 鉴权，2.流量控制，3.熔断, 4.日志监控, 5. 反向代理
+
+## Gateway 和 Zuul 区别:
+1.Spring Cloud Gateway 作为 Spring Cloud 生态系统中的网关，目标是替代Zuul
+2.SpringCloud  Gateway 是基于 Spring WebFlux 框架实现的
+3.Spring WebFlux 框架底层则使用了高性能的 Reactor模式通信框架Netty，提升了网关性能
+
+
+## GateWay 特性
+Spring Cloud Gate 基于 Spring FrameWork(支持Spring WebFlux),Project Reactor 和 Spring Boot 进行构建，具有如下特性:
+> * 动态路由
+> * 可以对路由指定 Predicate(断言)和Filter(过滤器)
+> * 集成 Hystric 的断路器功能
+> * 集成 Spring Cloud 服务发现功能
+> * 请求限流功能
+> * 支持路径重写
+
+## Route(路由)
+1. 一句话: **路由是构建网关的基本模块，它由 ID,目标 URI,一系列的断言和过滤器组成，如果断言为 true 则匹配该路由**
+2. 简单举例: 比如配置路径，-Path=/member/get/** #断言，路径匹配的进行路由转发，如果Http的请求路径不匹配，则
+不进行路由转发。
+
+## Filter (过滤)
+1. 一句话: 使用过滤器，可以在**请求被路由前或者之后** 对请求进行处理。
+2. 你可以理解成,在对Http请求断言匹配成功后，可以通过网关的过滤机制，对 Http请求处理
+3.简单举例:
+```
+yaml
+filters:
+ -AddRequestParamter=color,blue # 过滤器在匹配的请求头加上一对请求头，名称为color 值为blue
+,比如原来的http请求是:http://localhost:10000/member/get/1 == 过滤器处理
+=>http://localhost:10000/member/get/1?color=blue
+```
+
+## 梳理流程(how to work)
+1. 客户端向 Spring Cloud Gateway 发出请求，然后在 Gateway Handler Mapping 中找到与请求相匹配
+的路由，将其发送到 GateWay Web Handler
+2. Handler 再通过指定的过滤器链来将请求发送到我们实际的服务执行业务逻辑，然后返回。
+3. 过滤器之间用虚线分开是因为过滤器可能会在发送代理请求之前("pre") 或之后("post") 执行业务
+4. Filter 在“pre” 类型的过滤器可以做参数校验，权限校验，流量监控，日志输出，协议转换等
+5. 在 "post" 类型的过滤器中可以做响应内容，响应头的修改，日志的输出,流量监控等有着非常非常重要的作用.
+一句话说: 路由转发+执行过滤器链.
+1.  通过网关暴露的接口，实现调用真正的服务 
+2.  网关本身也是一个微服务模块
+
+> 特别提醒:
+>    1. 特别提示: 不要引入Spring-boot-starter-web 和 spring-boot-starter-actuator
+>    2. 因为 gateway 是一个服务网关，不需要 web... 
+
+
+## 路由配置
+两种方式：
+1.第一种方式: 在 application.yaml当中配置
+2.第二种方式: 编写配置类，进行一个类注入的方式进行配置(了解)
+
+
+## 实现功能: 
+> 当客户端通过网关服务调用接口，路由能够动态的切换到不同的服务接口，service provider 10000/2
+> 负载均衡(轮询)
+**在 application.yaml 当值配置动态的切换不同的服务接口,这时候需要将配置类方式的类-注释掉防止冲突**
+```
+yaml
+# 1. lb: 协议名, member-service-provider 注册到eureka server服务名(小写)
+          # 2. 默认情况下，负载均衡算法是轮询
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name
+
+```
+同样可以自定义配置上，负载均衡算法（通过配置类的方式配置）
+```
+java
+package com.rainbowsea.springcloud.config;
+
+
+import com.netflix.loadbalancer.IRule;
+import com.netflix.loadbalancer.RandomRule;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+
+@Configuration
+public class RibbonRule {
+
+    @Bean // 配置注入自己的负载均衡算法
+    public IRule myRibbonRule() {
+        // 这里老师返回的是 RandomRule，大家也可以指定其他的内容。
+        //return new WeightedResponseTimeRule();
+        return new RandomRule();  // 随机算法
+
+    }
+}
+
+
+```
+
+## Predicate/断言
+> 一句话: Predicate 就是一组匹配规则，当请求匹配成功,就执行对应的Route,匹配失败,放弃处理/转发
+> Route Predicate Factories
+https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/request-predicates-factories.html
+官网解读:
+1. Spring Cloud Gateway 包括许多内置 Route Predicate 工厂,所有这些Predicate都与Http请求的不同
+属性匹配,可以组合使用
+2. Spring Cloud Gateway 创建 Route 对象时,使用 RoutePredicateFactory 创建 Predicate 对象,
+Predicate 对象可以赋值给Route
+3. 所有这些谓词 **都匹配HTTP请求的不同属性** 多种谓词工厂可以组合。
+
+### 演示:
+只有: 2022-11-18 12:35:50之后的请求才进行匹配/转发，不满足条件的,不处理
+如下Java程序，获取到对应 时间格式的要求
+```
+java
+package com.rianbowsea.springcloud.test;
+
+import java.time.ZonedDateTime;
+
+public class T2 {
+    public static void main(String[] args) {
+        ZonedDateTime now = ZonedDateTime.now();
+        // 2024-11-17T23:48:50.519+08:00[Asia/Shanghai]
+        System.out.println(now);
+    }
+}
+
+
+```
+
+```
+yaml
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间
+        
+```
+
+**只有: 2022-11-18 12:35:50之前的请求才进行匹配/转发，不满足条件的,不处理**
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: before_route
+        uri: https://example.org
+        predicates:
+        - Before=2017-01-20T17:42:47.789-07:00[America/Denver]
+```
+```
+yaml
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          # gateway 最终访问的url是 url=url+Path
+          # 匹配后提供服务的路由地址:也可以是外网 http://www.baidu.com
+          # 这里我们匹配为一个 localhost:10000 服务即可
+          # 比如: 客户端/浏览器请求: url http://localhost:20000/member/get/1
+          # 如果根据Path匹配成功，最终访问的url/转发url就是 url=http://localhost:10000/member/get/1
+          # 如果匹配失败，则有 gateway 返回 404信息
+          # 疑问: 这里老师配置的 url 是固定的，在当前这种情况其实可以不是有 Eureka Server,
+          # 后面老师会使用灵活配置的方式，配置，就会使用 Eureka Server
+          # 注意：当这里我们仅仅配置了一个url 的时候，就只会将信息转发到这个10000服务端，为我们处理业务，
+          # 一个服务就没有(轮询)的负载均衡了
+          #          uri: http://localhost:10000
+          # 将查询服务，配置为动态的服务(轮询)负载均衡
+          # 1. lb: 协议名, member-service-provider 注册到eureka server服务名(小写)
+          # 2. 默认情况下，负载均衡算法是轮询
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+#            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+        
+```
+
+
+**只有: 只有 2020-11-18 12:35:50  和  2022-11-18 12:35:50  之间的请求才进行匹配/转 发,  不满足该条件的，不处理**
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: between_route
+        uri: https://example.org
+        predicates:
+        - Between=2017-01-20T17:42:47.789-07:00[America/Denver], 2017-01-21T17:42:47.789-07:00[America/Denver]
+```
+```
+yaml
+
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          # gateway 最终访问的url是 url=url+Path
+          # 匹配后提供服务的路由地址:也可以是外网 http://www.baidu.com
+          # 这里我们匹配为一个 localhost:10000 服务即可
+          # 比如: 客户端/浏览器请求: url http://localhost:20000/member/get/1
+          # 如果根据Path匹配成功，最终访问的url/转发url就是 url=http://localhost:10000/member/get/1
+          # 如果匹配失败，则有 gateway 返回 404信息
+          # 疑问: 这里老师配置的 url 是固定的，在当前这种情况其实可以不是有 Eureka Server,
+          # 后面老师会使用灵活配置的方式，配置，就会使用 Eureka Server
+          # 注意：当这里我们仅仅配置了一个url 的时候，就只会将信息转发到这个10000服务端，为我们处理业务，
+          # 一个服务就没有(轮询)的负载均衡了
+          #          uri: http://localhost:10000
+          # 将查询服务，配置为动态的服务(轮询)负载均衡
+          # 1. lb: 协议名, member-service-provider 注册到eureka server服务名(小写)
+          # 2. 默认情况下，负载均衡算法是轮询
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+        
+
+```
+
+**需求: 请求带有cookie键:user值:hsp才匹配/断言成功**

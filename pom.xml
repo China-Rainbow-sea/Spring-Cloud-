@@ -17,6 +17,7 @@
         <module>e-commerce-eureka-server-9002</module>
         <module>member-service-provider-10002</module>
         <module>member-service-consumer-openfeign-80</module>
+        <module>e-commerce-gateway-20000</module>
     </modules>
     <!--    表明这是一个父工程,聚合管理其它模块-->
     <packaging>pom</packaging>
