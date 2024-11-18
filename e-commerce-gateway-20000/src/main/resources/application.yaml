@@ -24,9 +24,20 @@ spring:
           uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
           predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
             - Path=/member/get/**
+            #            - Path=/member/get/**,/member/save
             #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
             #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
-            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            #            - Header=X-Request-Id, hello
+            #            - Host=**.rainbowsea.com,**.anotherhost.org
+            #            -
+            #            - Method=POST,GET
+            #            - Query=email, [\w-]+@([a-zA-Z]+\.)+[a-zA-Z]+ # red是参数名;gree是值(支持正则表达式)
+          #            - RemoteAddr=127.0.0.1
+#          filters:
+        #            - AddRequestParameter=color, blue #过滤器工厂会在匹配的请求头加上一对请求头， 名称为 color 值为 blue
+        #            - AddRequestParameter=age, 18 # 过滤器工厂会在匹配的请求头加上一对请求头，名称为 age 值为 18
         - id: member_route02 # 路由的id,程序员自己配置，要求"唯一"
           #          uri: http://localhost:10000
           # 配置(轮询负载均衡)动态调用服务器

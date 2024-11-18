@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
+import javax.servlet.http.HttpServletRequest;
 
 @RestController
 @Slf4j
@@ -58,8 +59,11 @@ public class MemberController {
      * @return
      */
     @GetMapping("/member/get/{id}")
-    public Result getMemberById(@PathVariable("id") Long id) {
+    public Result getMemberById(@PathVariable("id") Long id, HttpServletRequest request) {
         Member member = memberService.queryMemberById(id);
+
+        String color = request.getParameter("color");
+        String age = request.getParameter("age");
 
 
         // 模拟超时 ,这里暂停 5秒
@@ -71,7 +75,7 @@ public class MemberController {
 
         // 使用 Result 把查询到的结果返回
         if (member != null) {
-            return Result.success("查询会员成功 member-service-provider-10000 ", member);
+            return Result.success("查询会员成功 member-service-provider-10000 " + color + "age" + age, member);
         } else {
             return Result.error("402", "ID" + id + "不存在 member-service-provider-10000 ");
         }

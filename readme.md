@@ -585,3 +585,313 @@ spring:
 ```
 
 **需求: 请求带有cookie键:user值:hsp才匹配/断言成功**
+
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: cookie_route
+        uri: https://example.org
+        predicates:
+        - Cookie=chocolate, ch.p
+```
+
+```
+yaml
+
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            - Cookie=user,hsp # 配置 Cookie 断言
+```
+
+
+**需求: 请求头 Header  有  X-Request-Id，  并且值 hello  才匹配/断言成功**
+
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: header_route
+        uri: https://example.org
+        predicates:
+        - Header=X-Request-Id, \d+
+X-Request-Id  是 header 的名称, \d+  是一个正则表达式
+```
+
+```
+yaml
+
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            - Header=X-Request-Id, hello
+```
+
+
+**需求: 请求 Host 是**.hspedu.**  才匹配/断言成功     比如  Host www.rianbowsea.com**
+**Host 可以有多个,  使用逗号间隔**
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: host_route
+        uri: https://example.org
+        predicates:
+        - Host=**.somehost.org,**.anotherhost.org
+```
+
+```
+yaml
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+#            - Header=X-Request-Id, hello
+            - Host=**.rainbowsea.com,**.anotherhost.org
+
+```
+
+**Method Route Predicate** 
+**需求: 请求是 Get 方式才匹配/断言成功** 
+请求方式可以有多个   使用逗号间隔
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: method_route
+        uri: https://example.org
+        predicates:
+        - Method=GET,POST
+```
+```
+yaml
+
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          # gateway 最终访问的url是 url=url+Path
+          # 匹配后提供服务的路由地址:也可以是外网 http://www.baidu.com
+          # 这里我们匹配为一个 localhost:10000 服务即可
+          # 比如: 客户端/浏览器请求: url http://localhost:20000/member/get/1
+          # 如果根据Path匹配成功，最终访问的url/转发url就是 url=http://localhost:10000/member/get/1
+          # 如果匹配失败，则有 gateway 返回 404信息
+          # 疑问: 这里老师配置的 url 是固定的，在当前这种情况其实可以不是有 Eureka Server,
+          # 后面老师会使用灵活配置的方式，配置，就会使用 Eureka Server
+          # 注意：当这里我们仅仅配置了一个url 的时候，就只会将信息转发到这个10000服务端，为我们处理业务，
+          # 一个服务就没有(轮询)的负载均衡了
+          #          uri: http://localhost:10000
+          # 将查询服务，配置为动态的服务(轮询)负载均衡
+          # 1. lb: 协议名, member-service-provider 注册到eureka server服务名(小写)
+          # 2. 默认情况下，负载均衡算法是轮询
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**,/member/save
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            #            - Header=X-Request-Id, hello
+            #            - Host=**.rainbowsea.com,**.anotherhost.org
+            #            -
+            - Method=POST,GET
+
+```
+
+
+**Path Route Predicate: Path 可以有多个,  使用逗号间隔**
+
+**Query Route Predicate 需求:  请求有参数 email ,并且满足电子邮件的基本格式,  才能匹配/断言成功** 
+
+red 是参数名 gree. 是值 支持正则表达式.
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: query_route
+        uri: https://example.org
+        predicates:
+        - Query=red, gree.
+```
+
+
+```
+yaml
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+            - Path=/member/get/**
+            #            - Path=/member/get/**,/member/save
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            #            - Header=X-Request-Id, hello
+            #            - Host=**.rainbowsea.com,**.anotherhost.org
+            #            -
+            #            - Method=POST,GET
+            - Query=email, [\w-]+@([a-zA-Z]+\.)+[a-zA-Z]+ # red是参数名;gree是值(支持正则表达式)
+```
+http://localhost:20000/member/get/1?email=hsp@sohu.com
+http://localhost:20000/member/get/1?email=hspsohu.com
+
+**需求分析/图解**
+需求: 请求转发的IP是127.0.0.1，才能匹配/断言成功
+The RemoteAddr Route Predicate Factory 
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: remoteaddr_route
+        uri: https://example.org
+        predicates:
+        - RemoteAddr=192.168.1.1/24
+```
+
+
+```
+yaml
+
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - Path=/member/get/**,/member/save
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            #            - Header=X-Request-Id, hello
+            #            - Host=**.rainbowsea.com,**.anotherhost.org
+            #            -
+            #            - Method=POST,GET
+            #            - Query=email, [\w-]+@([a-zA-Z]+\.)+[a-zA-Z]+ # red是参数名;gree是值(支持正则表达式)
+            - RemoteAddr=127.0.0.1
+```
+
+http://127.0.0.1:20000/member/get/1  测试
+
+**The Weight Route Predicate Factory  **
+```
+yaml
+spring:
+  cloud:
+    gateway:
+      routes:
+      - id: weight_high
+        uri: https://weighthigh.org
+        predicates:
+        - Weight=group1, 8
+      - id: weight_low
+        uri: https://weightlow.org
+        predicates:
+        - Weight=group1, 2
+```
+
+
+## Filter(过滤)
+1. 一句话: 使用过滤器,可以在**请求被路由前或者之后**对请求进行处理
+2. 你可以理解成，在对Http请求断言匹配成功后，可以通过网关的过滤机制，对Http请求处理
+3. 简单举例:
+```
+java
+
+filters:
+ -AddRequestParameter=color,blue # 过滤器在匹配的请求头加上一对请求头，名称为color值为blue
+,比如原来的http请求是:http://localhost:10000/member/get/1 ===过滤器处理
+http://localhost:10000/member/get/1?color=blue
+```
+
+https://docs.spring.io/spring-cloud-gateway/reference/spring-cloud-gateway/global-filters.html
+路由过滤器可用于修改进入的HTTP请求和返回的HTTP响应
+Spring Cloud Gateway 内置了多种路由过滤器，他们都由GatewayFilter的工厂类来产生
+
+
+```
+yaml
+spring:
+  application:
+    name: e-commerce-gateway
+  cloud:
+    gateway:
+      routes: # 配置路由，可以配置多个路由 List<RouteDefinition> routes
+        - id: member_route01 # 路由的id,程序员自己配置，要求唯一
+          uri: lb://MEMBER-SERVICE-PROVIDER # 注意是大写发服务器名name（大小写都行）
+          predicates: # 断言,可以多种形式 # 断言为通过报 404 找不到异常
+            - Path=/member/get/**
+            #            - Path=/member/get/**,/member/save
+            #            - After=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间，之后
+            #            - Before=2024-11-17T23:48:50.519+08:00[Asia/Shanghai] # 配置断言限制访问时间,之前
+            #            - Between=2024-11-17T23:48:50.519+08:00[Asia/Shanghai], 2024-11-18T23:48:50.519+08:00[Asia/Shanghai]
+            #            - Cookie=user,hsp # 配置 Cookie 断言
+            #            - Header=X-Request-Id, hello
+            #            - Host=**.rainbowsea.com,**.anotherhost.org
+            #            -
+            #            - Method=POST,GET
+            #            - Query=email, [\w-]+@([a-zA-Z]+\.)+[a-zA-Z]+ # red是参数名;gree是值(支持正则表达式)
+          #            - RemoteAddr=127.0.0.1
+          filters:
+            - AddRequestParameter=color, blue #过滤器工厂会在匹配的请求头加上一对请求头， 名称为 color 值为 blue
+            - AddRequestParameter=age, 18 # 过滤器工厂会在匹配的请求头加上一对请求头，名称为 age 值为 18
+        
+```
+
+1.  自定义全局 GlobalFilter 过滤器
+2.  如果请求参数  user=hspedu , pwd=123456  则放行,  否则不能通过验证
+
