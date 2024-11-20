@@ -13,7 +13,7 @@
 //
 //    @Bean
 //    public IRule myRibbonRule() {
-//        // 这里老师返回的是 RandomRule ，当然小伙伴也可以自己指定
+//        // 这里返回的是 RandomRule ，当然小伙伴也可以自己指定
 //        return new RandomRule();
 //    }
 //}
