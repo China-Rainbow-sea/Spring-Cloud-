@@ -3,11 +3,22 @@ server:
 spring:
   application:
     name: member-service-provider # 配置应用的名称
+  # 配置 sleuth 和 zipkin
+  zipkin:
+    # 配置 zipkin 的 url 地址，是网络当中给的哪个  zipkin 地址
+    base-url: http://localhost:9411/
+
+  # 配置 sleuth 信息
+  sleuth:
+    sampler:
+      # 采样率: 在 0~1之间，1表示全部采集
+      probability: 1
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource # 配置 alibaba 的数据库连接池
     password: MySQL123
     username: root
     url: jdbc:mysql://localhost:3306/e_commerce_center_db?useSSL=true&useUnicode=true&characterEncoding=UTF-8
+
 mybatis:
   mapper-locations: classpath:mapper/*.xml # 指定 mapper.xml 文件位置 classpath 表示 resources 目录下
   type-aliases-package: com.rainbowsea.springcloud.entity # 实例 bean 类所在的包,这样可以通过类名的方式

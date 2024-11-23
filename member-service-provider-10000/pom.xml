@@ -16,6 +16,14 @@
 
     <!--    引入相关的依赖-->
     <dependencies>
+
+        <!--包含了 sleuth+zipkin-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-zipkin</artifactId>
+        </dependency>
+
+
         <!--        引入web-starter 说明:这里我们使用版本仲裁(从父项目继承了版本)-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

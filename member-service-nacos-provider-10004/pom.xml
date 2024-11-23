@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!--    parent 父项目/模块内容-->
     <parent>
         <artifactId>e-commerce-center</artifactId>
         <groupId>com.rainbowsea</groupId>
@@ -10,30 +9,56 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>member-service-consumer-80</artifactId>
+    <artifactId>member-service-nacos-provider-10004</artifactId>
 
-    <!--    引入相关的依赖：我们引入了当前所需要的依赖，后面如果有其它的需要，再灵活添加-->
+
+    <!--    引入相关的依赖-->
     <dependencies>
-
-        <!--包含了 sleuth+zipkin-->
+        <!-- 在微服务模块引入 nacos-discovery starter -->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-zipkin</artifactId>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+            <version>2.1.0.RELEASE</version>
         </dependency>
 
-        <!--        引入 web-starter 说明：我们使用版本仲裁(从父项目继承了版本)-->
+        <!--        引入web-starter 说明:这里我们使用版本仲裁(从父项目继承了版本)-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-web</artifactId>
         </dependency>
 
         <!--1. starter-actuator 是sprng boot 程序的监控系统,可以实现健康检查,info 信息等
-         2. 访问http://localhost:10000/actuator 可以看到相关链接,还可以做相关配置-->
+            2. 访问http://localhost:10000/actuator 可以看到相关链接,还可以做相关配置-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
         </dependency>
 
+        <!--        引入 mybatis-starter 整合到 springboot 当中-->
+        <dependency>
+            <groupId>org.mybatis.spring.boot</groupId>
+            <artifactId>mybatis-spring-boot-starter</artifactId>
+        </dependency>
+
+
+        <dependency>
+            <groupId>com.alibaba</groupId>
+            <artifactId>druid-spring-boot-starter</artifactId>
+            <!--  这里我们重新指定一下 version 版本,因为父项目当中没有-->
+            <version>1.1.13</version>
+        </dependency>
+
+        <!--        引入 mysql依赖,使用版本仲裁-->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+        </dependency>
+
+        <!--      spring-boot-starter-jdbc 引入  -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-jdbc</artifactId>
+        </dependency>
 
         <!--        lombok 引入-->
         <dependency>
@@ -41,6 +66,7 @@
             <artifactId>lombok</artifactId>
             <optional>true</optional>
         </dependency>
+
 
         <!--        引入 test-starter -->
         <dependency>
@@ -56,11 +82,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- 引入 eureka-client 依赖  -->
-        <!--        注意：存在一个 starter 不要选错了-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
     </dependencies>
+
 </project>

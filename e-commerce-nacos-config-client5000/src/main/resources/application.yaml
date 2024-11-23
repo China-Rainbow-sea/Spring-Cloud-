@@ -1,0 +1,3 @@
+spring:
+  profiles:
+    active: dev # 指定环境，常见的环境有 dev(开发)/test(测试)/prod(生产)

@@ -2,7 +2,6 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <!--    parent 父项目/模块内容-->
     <parent>
         <artifactId>e-commerce-center</artifactId>
         <groupId>com.rainbowsea</groupId>
@@ -10,15 +9,21 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>member-service-consumer-80</artifactId>
+    <artifactId>e-commerce-nacos-config-client5000</artifactId>
+
 
     <!--    引入相关的依赖：我们引入了当前所需要的依赖，后面如果有其它的需要，再灵活添加-->
     <dependencies>
 
-        <!--包含了 sleuth+zipkin-->
+        <!--nacos-config-->
         <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-zipkin</artifactId>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!--引入 alibaba-nacos-discovery  即场景启动器，使用版本仲裁 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
         </dependency>
 
         <!--        引入 web-starter 说明：我们使用版本仲裁(从父项目继承了版本)-->
@@ -56,11 +61,6 @@
             <version>${project.version}</version>
         </dependency>
 
-        <!-- 引入 eureka-client 依赖  -->
-        <!--        注意：存在一个 starter 不要选错了-->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
     </dependencies>
+
 </project>

@@ -4,6 +4,19 @@ server:
 spring:
   application:
     name: member-service-consumer-80 # 该项目/模块名称
+    # 配置 zipkin + sleuth 信息
+  zipkin:
+    # zipkin 网络当中的哪个 zipkin
+    base-url: http://localhost:9411
+  # 配置 sleuth 信息
+  sleuth:
+    sampler:
+      # 采样率: 在0-1之间 ,1表示全部采集
+      probability: 1
+
+
+
+
 
 # 配置 eureka client 注意，因为这里该模块是作为 client 客户端的角色的，所有要将自己client的信息发送给 Server 当中去的
 eureka:

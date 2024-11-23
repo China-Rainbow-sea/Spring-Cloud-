@@ -12,8 +12,12 @@
         <module name="member-service-consumer-openfeign-80" />
         <module name="member-service-consumer-80" />
         <module name="e-commerce-eureka-server-9001" />
+        <module name="member-service-nacos-provider-10006" />
         <module name="member-service-provider-10000" />
+        <module name="member-service-nacos-consumer-80" />
+        <module name="e-commerce-nacos-config-client5000" />
         <module name="e-commerce-gateway-20000" />
+        <module name="member-service-nacos-provider-10004" />
         <module name="e_commerce_center-common-api" />
       </profile>
     </annotationProcessing>

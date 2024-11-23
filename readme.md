@@ -895,3 +895,107 @@ spring:
 1.  自定义全局 GlobalFilter 过滤器
 2.  如果请求参数  user=hspedu , pwd=123456  则放行,  否则不能通过验证
 
+
+# SpringCloud Sleuth+Zipkin
+1. 在微服务框架中，一个由客户端发起的请求在后端系统中会经过多个不同的服务节点调用，来协同
+产生最后的请求结果，每一个请求都会形成一条复杂的分布式服务调用的**链路** 。
+
+2. 链路中的任何一环出现高延时或错误会引起整个请求最后的失败，因此对**整个服务的调用进行链路追踪和
+分析** 就非常的重要。
+3. Sleuth 和 Zipkin 的简单关系图：
+**一句话：Sleuth 提供了一套完整的服务跟踪的解决方案，并兼容 Zipkin，** 
+**Sleuth 做链路追踪，Zipkin 做数据搜集/存储/可视化** 
+
+## Sleuth 工作原理
+1. Span 和 Trace 在一个系统中使用 Zipkin 的过程-图形化**
+
+> * Span: 基本工作单元，**表示调用链路来源，通俗的理解span就是一次请求信息** 。
+> * spans 的 parent/child 关系图形化** 
+> 1. 表示一请求链路，一条链路通过 Trace Id 唯一标识，Span 标识发起的请求信息，各span通过 parent id 关联起来
+> 2. Trace: 类似于树结构的 Span 集合，表示一条调用链路，存在唯一标识
+> 3. Span: 基本工作单元，表示调用链路来源，通俗的理解 span 就是一次请求信息。
+>  ```
+>  text
+>   1.Span 标识发起的请求信息
+>   2.各span 通过 parent id 关联起来
+> ```
+
+## Sleuth 和 Zipkin 可以对服务调用链路进行监控，并在 Zipkin 进行显示(r如图:)
+
+```
+xml
+        <!--包含了 sleuth+zipkin-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-zipkin</artifactId>
+        </dependency>
+
+```
+查看一次调用链路的深度，以及该链路包含请求，各个请求耗时，找到请求瓶颈，为优化提供依据(重要)
+浏览器访问:http://localhost:9411/zipkin/
+
+
+# Spring Cloud Alibaba Nacos
+官网地址: https://github.com/alibaba/Nacos
+Nacos 是什么: 一句话: Nacos 就是注册中心[替代 Eureka ] + 配置中心[替代 Config]
+Nacos : Dynamic Naming and Configuration Service
+Nacos: 架构理论基础: CAP理论(支持AP和CP，可以切换)
+浏览器访问：http://localhost:8848/nacos
+用户名和密码都是: nacos
+简单的说：Nacos 和 Eureka 是一样的
+
+## 各种注册中心对比
+
+### Nacos 中 AP 和 CP 模式如何切换
+> 这个不能随便切，建议保持默认的 AP 即可
+> 集群环境下所有的服务都要切换
+> 可以使用 postman 模拟，必须使用 put 请求，用 get 和 post 均无效
+
+## Nacos Server 配置中心
+1. 进入到 Nacos Server
+2. 加入配置, **`特别提醒: 文件后缀.yaml `** 
+
+```
+xml
+        <!--nacos-config-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-config</artifactId>
+        </dependency>
+        <!--引入 alibaba-nacos-discovery  即场景启动器，使用版本仲裁 -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
+        </dependency>
+```
+
+
+```
+yaml
+server:
+  port: 5000
+
+spring:
+  application:
+    name: e-commerce-nacos-config-client
+  # 配置 nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 配置服务注册中心地址
+      config:
+        server-addr: localhost:8848 # 配置中心地址
+```
+> 特别说明: 这里因为只有一个主机，所以我们这里的 Nacos 是既是 服务注册中心，也是配置中心，
+> 所以这里的“注册中心的地址” 和 “配置中心的地址” 都是一样的。
+
+### 注意事项和细节
+1. @Value("${config.name}") 是在: org.springframework.beans.factory.annotation.Value 包下
+2. 配置文件 application.yaml 和 bootstrap.yaml 结合会得到配置文件/资源地址
+3. 参考文档: https://nacos.io/zh-cn/docs/quick-start-spring-cloud.html
+4. 注意在: Nacos Server 的配置文件的后缀是 .yaml ，而不是 .yml 不然，会报错，无法编译通过
+5. 在项目初始化时,要保证先从配置中心进行拉取,拉取配置之后,才能保证项目的正常启动,也就是说如果
+项目不能正确的获取到 Nacos Server 的配置数据,项目是启动不了的.(演示)，同理前后都是一样的，如果编写错误的话
+6. springboot 中配置文件的加载是存在优先级顺序的，bootstrap.yml 优先级高于 application.yaml
+7. **@RefreshScope 是springcloud 原生注解,实现配置信息自动刷新,如果在Nacos Server 修改了
+配置数据,Client 端就会得到最新配置(演示)**
