@@ -13,6 +13,8 @@ spring:
     sampler:
       # 采样率: 在 0~1之间，1表示全部采集
       probability: 1
+
+
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource # 配置 alibaba 的数据库连接池
     password: MySQL123
