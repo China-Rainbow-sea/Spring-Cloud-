@@ -1002,3 +1002,111 @@ spring:
 6. springboot 中配置文件的加载是存在优先级顺序的，bootstrap.yml 优先级高于 application.yaml
 7. **@RefreshScope 是springcloud 原生注解,实现配置信息自动刷新,如果在Nacos Server 修改了
 配置数据,Client 端就会得到最新配置(演示)**
+
+
+## Nacos 分类配置 (实现配置隔离)
+**注意: nacos 要是正在运行的状态，同时不要忘记了 yaml后缀** 
+### Data Id 方案
+```
+yaml
+spring:
+  profiles:
+    active: test # 指定环境，常见的环境有 dev(开发)/test(测试)/prod(生产)
+
+
+```
+
+```
+yaml
+server:
+  port: 5000
+
+spring:
+  application:
+#    name: e-commerce-nacos-config
+    name: e-commerce-nacos-config-client
+  # 配置 nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 配置服务注册中心地址
+      config:
+        server-addr: localhost:8848 # 配置中心地址
+        file-extension: yaml # 指定yaml格式的配置，配置中心放的配置是 yaml格式的配置
+
+
+```
+
+### Group 方案:
+```
+yaml
+
+spring:
+  profiles:
+    active: dev # 指定环境，常见的环境有 dev(开发)/test(测试)/prod(生产)
+
+```
+
+```
+yaml
+
+server:
+  port: 5000
+
+spring:
+  application:
+    #    name: e-commerce-nacos-config
+    name: e-commerce-nacos-config-client
+  # 配置 nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 配置服务注册中心地址
+      config:
+        server-addr: localhost:8848 # 配置中心地址
+        file-extension: yaml # 指定yaml格式的配置，配置中心放的配置是 yaml格式的配置
+#        group: order # 指定 order组,默认DEFAULT_GROUP
+        group: seckill # 指定 seckill组,默认DEFAULT_GROUP
+
+
+```
+
+### namespace 命名空间 + group 方案
+```
+yaml
+
+spring:
+  profiles:
+    active: dev # 指定环境，常见的环境有 dev(开发)/test(测试)/prod(生产)
+```
+
+```
+yaml
+server:
+  port: 5000
+
+spring:
+  application:
+    #    name: e-commerce-nacos-config
+    name: e-commerce-nacos-config-client
+  # 配置 nacos
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 配置服务注册中心地址
+      config:
+        server-addr: localhost:8848 # 配置中心地址
+        file-extension: yaml # 指定yaml格式的配置，配置中心放的配置是 yaml格式的配置
+        #        group: order # 指定 order组,默认DEFAULT_GROUP
+        group: seckill # 指定 seckill组,默认DEFAULT_GROUP
+        namespace: cd4b7aa7-ae61-4d5d-9eb5-efb29a07f702 # 指定对应 namespace id 阿里的
+
+
+```
+**注意: namespace:不要复制过多了，不要把命名空间的名称也给复制上了。** 
+
+
+## Namespace/Group/Data ID 关系:
+1. Nacos 默认的命名空间是: public，Namespace 主要用来实现配置隔离，隔离范围大
+2. Group 默认是 DEFAULT GROUP, GROUP 可以把不同的微服务划分到同一个分组里面去
+3. Service 就是微服务,相同的 Service 可以是一个 Cluster(簇/集群),Instance 就是微服务的实例
