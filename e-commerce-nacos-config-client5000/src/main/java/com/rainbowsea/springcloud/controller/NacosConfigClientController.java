@@ -20,18 +20,19 @@ public class NacosConfigClientController {
     3. 这里的@"${config.ip}" 不能乱写，要有依据,如果有一点不一致的都会,报错，无法运行的
     是在: org.springframework.beans.factory.annotation.Value 包下的
      */
+
     //@Value("${config:ip}")  // 使用 : 也是可以的
     @Value("${config.ip}")  // 使用 : 也是可以的
     private String configIp;
-
-    @Value("${config.name}")
-    private String configName;
-
 
     @GetMapping("/nacos/config/ip")
     public String getConfigIp() {
         return configIp;
     }
+
+    @Value("${config.name}")
+    private String configName;
+
 
     @GetMapping("/nacos/config/name")
     public String getConfigName() {

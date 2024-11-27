@@ -13,9 +13,9 @@ spring:
       config:
         server-addr: localhost:8848 # 配置中心地址
         file-extension: yaml # 指定yaml格式的配置，配置中心放的配置是 yaml格式的配置
-        #        group: order # 指定 order组,默认DEFAULT_GROUP
+#        group: order # 指定 order组,默认DEFAULT_GROUP
         group: search # 指定 seckill组,默认DEFAULT_GROUP
-        namespace: f87c69cd-9fd2-4326-b58a-9a5d326c3af1 # 指定 namespace id 百度的
+        namespace: f62d7a4b-8fed-4b95-9989-350170768b81 # 指定 namespace id 百度的
 #        namespace: cd4b7aa7-ae61-4d5d-9eb5-efb29a07f702 # 指定对应 namespace id 阿里的
 
 

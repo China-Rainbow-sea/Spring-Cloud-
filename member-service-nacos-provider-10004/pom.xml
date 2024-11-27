@@ -21,6 +21,7 @@
             <version>2.1.0.RELEASE</version>
         </dependency>
 
+
         <!--        引入web-starter 说明:这里我们使用版本仲裁(从父项目继承了版本)-->
         <dependency>
             <groupId>org.springframework.boot</groupId>

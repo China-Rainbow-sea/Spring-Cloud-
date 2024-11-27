@@ -18,8 +18,6 @@ mybatis:
   mapper-locations: classpath:mapper/*.xml # 指定 mapper.xml 文件位置 classpath 表示 resources 目录下
   type-aliases-package: com.rainbowsea.springcloud.entity # 实例 bean 类所在的包,这样可以通过类名的方式
 
-
-
 # 配置暴露所有的监控点:
 management:
   endpoints:

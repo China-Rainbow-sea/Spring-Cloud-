@@ -15,7 +15,7 @@
     <!--    引入相关的依赖：我们引入了当前所需要的依赖，后面如果有其它的需要，再灵活添加-->
     <dependencies>
 
-        <!--引入 alibaba-nacos   -->
+        <!--引入 alibaba-nacos -discovery   -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
             <artifactId>spring-cloud-starter-alibaba-nacos-discovery</artifactId>
