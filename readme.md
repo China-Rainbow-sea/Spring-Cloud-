@@ -1110,3 +1110,502 @@ spring:
 1. Nacos 默认的命名空间是: public，Namespace 主要用来实现配置隔离，隔离范围大
 2. Group 默认是 DEFAULT GROUP, GROUP 可以把不同的微服务划分到同一个分组里面去
 3. Service 就是微服务,相同的 Service 可以是一个 Cluster(簇/集群),Instance 就是微服务的实例
+
+
+# SpringCloud Alibaba Sentinel
+
+## Sentinel 基础
+官网地址: https://github.com/alibaba/Sentinel
+快速开始: https://sentinelguard.io/zh-cn/docs/quick-start.html
+中文文档: https://github.com/alibaba/Sentinel/wiki/%E4%BB%8B%E7%BB%8D
+
+## Sentinel 概述
+Sentinel 是什么
+> 随着微服务的流行，服务和服务之间的**稳定性** 变得越来越重要。Sentinel 以流量为切入点，
+>从流量控制，熔断降级，系统负载保护等多个维度保护服务的稳定性。
+
+Sentinel 的主要特征:
+> 实时监控,机器发现，规则配置，流量控制，线程数隔离，慢调用降级，调用链路
+> 异常熔断，系统自适用保护。
+
+**一句话: Sentinel 分布式系统的流量防卫兵，保护你的微服务** 
+
+**Sentinel 核心功能** 
+流量控制,熔断降级，系统负载保护，消息削峰填谷
+流量控制:
+> 拿旅游景点举个例子，每个旅游景点通常都会有最大的接待量，不可能无限制的放游客进入，
+> 比如长城每天只卖八万张票，超过八万的游客，无法购买票进入，因为如果超过八万人，
+> 景点的工作人员可能就忙不过来，过于拥挤的景点也会影响游客的体验和心情，并且还会有安全隐患，
+> 只卖 N张票，这就是一种限流的手段。
+
+**熔断降级** 
+在调用系统的时候，如果调用的时候链路当中的某个资源出现了不稳定的，最终会导致
+请求发生堆积，如下图所示：
+
+
+> 熔断降级可以解决这个问题，所谓的熔断降级就是当检测到调用链路中某个资源出现不稳定 表现，
+> 例如: 请求响应时间长或异常比例升高的时候，则对这个资源的调用进行限制，让请求快速失败，
+> 避免影响到其它的资源而导致级联故障
+
+**系统负载保护** 
+> 根据系统能够处理的请求，和允许进来的请求，来做平衡，追求的目标是在系统不被拖垮的情况下，
+> 提高系统的吞吐率。
+
+**消息削峰填谷**
+> 某瞬时来了大流量的请求，而如果此时要处理所有的请求，很可能会导致系统负载过高，
+> 影响稳定性。但其实可能后面几秒之内都没有消息投递，若直接把多余的消息丢掉则设有
+> 充分利用系统处理消息的能力。
+ - Sentinel 两个组成部分
+ 核心库: (Java客户端) 不依赖任何框架/库，能够运行在所有Java运行时，环境，对 Spring Cloud有较好的支持。
+ 控制台: (Dashboard) 基于Spring Boot 开发，打包后可以直接运行，不需要额外的 Tomcat 等应用容器。
+ 
+
+Sentinel 下载的官方地址: https://github.com/alibaba/Sentinel/releases/tag/v1.8.0
+运行: 指令: java-jar sentinel-dashboard-1.8.0.jar  注意；要在对应的路径下运行才行。
+注意: Sentinel 控制台 默认端口是 8080 
+指定: Sentinel 的服务器的端口: java -jar sentinel-dashboard-1.8.0.jar --server.port=9999 (更改Sentinel 的控制台的端口)
+
+
+##  Sentinel 监控微服务(进行实时监控)
+
+QPS:  Querles Per Second(每秒查询率) ,是服务器每秒响应的查询次数 
+Sentinel 采用的是懒加载，只有调用了某个接口/服务，才能看到监控数据
+Sentinel 流量控制
+规则:
+资源名:唯一名称，默认请求路径。
+针对来源: Sentinel 可以针对调用者进行限流，填写微服务名，默认 default(不区分来源)
+阈值类型/单击阈值:
+ QPS(每秒钟的请求数量)：当调用该 api 的 QPS 达到阈值的时候，进行限流
+ 线程数: 当调用该 api 的线程达到阈值的时候，进行限流
+
+**解读QPS和线程数的区别,注意听: 比如 QPS 和  线程我们都设置阈值为 1 ** 
+> 1. 对 QPS 而言，如果 1秒内，客户端发出了2次请求，就到达阈值，从而限流。 QPS 表示: 每秒钟的请求数量
+> 2. 对线程而言，如果在 1秒内，客户端降发出了 2 次请求，不一定达到线程限制的阈值，为什么呢
+> 假设我们 1次请求后台会创建一个线程，但是这个请求完成时间是 0.1秒(可以视为该请求对应的线程存活 0.1 秒)，
+> 所以当客户端第2次请求时，(比如客户端是在 0.3 秒发出的)，这时第1个请求的线程就是已经结束了，因此就没有达到线程的阈值，也不会
+> 限流。
+> 3. 可以这样理解，如果 1 个请求对应的线程平均执行时间为 0.1 那么，就相当于 QPS 为 10
+> 是否集群：不需要集群。
+> 流控模式: 
+>   * 直接: api 达到限流条件时，直接限流
+>   * 关联: 当关联的资源达到阈值时，就限流自己
+>   * 链路:  当从某个接口过来的资源达到限流条件，开启限流。
+流控效果:
+>   * 快速失败: 直接失败，抛出异常
+>   * Warm Up: 根据 codeFactor(冷加载因子，默认 3) 的值，从阈值/codeFactor,经过预热时长，才达到设置的 QPS 阈值
+>   * 排队等待: 匀速排队，让请求以匀速的速度通过，阀值类型必须设置为 QPS(每秒访问请求的次数)，否则无效。
+
+
+ ** demo01** 
+ 1. 浏览器输入: http://localhost:10004/member/get/1 , 1 秒钟内访问次数不超过 1 次,  页 面显示正常
+ 2. 浏览器输入: http://localhost:10004/member/get/1 , 1 秒钟内访问次数超过 1 次,  页面 出现错误提示
+
+> 注意事项和细节
+> 1. 流量规则改动，实时生效，不需重启微服务，Sentine 控制台
+> 2. 在 sentinel 配置流量规则时，如何配置通配符问题，比如: /member/get/1/member/get/2 统一
+>  使用一个规则
+```
+java
+
+方案1:  在 sentinel 中/member/get?id=1 和 /member/get?id=2 被统一认为是 /member/get 所以
+只要对 /member/get 限流就OK了。
+
+/**
+     * 这里我们使用 url占位符 + @PathVariable
+     *
+     * @param id
+     * @return
+     */
+    //@GetMapping("/member/get/{id}")
+    // 在sentinel中  /member/get?id=1  和  /member/get?id=2  被统一认为是 /member/get  所以只要对/member/get  限流就OK了. 进行统一的限流
+    @RequestMapping(value = "/member/get/", params = "id", method = RequestMethod.GET)
+    //public Result getMemberById(@PathVariable("id") Long id, HttpServletRequest request) {
+    public Result getParameter(Long id) {
+        Member member = memberService.queryMemberById(id);
+
+        //String color = request.getParameter("color");
+        //String age = request.getParameter("age");
+
+
+        // 模拟超时 ,这里暂停 5秒
+       /* try {
+            TimeUnit.SECONDS.sleep(5);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }*/
+
+        // 使用 Result 把查询到的结果返回
+        if (member != null) {
+            //return Result.success("查询会员成功 member-service-nacos-provider-10004  color" + color + "age" + age, member);
+            return Result.success("查询会员成功 member-service-nacos-provider-10004  color",member);
+        } else {
+            return Result.error("402", "ID" + id + "不存在 member-service-nacos-provider-10004 ");
+        }
+    }
+```
+
+
+```
+java
+方案2： URL 资源清洗
+ 可以通过 UrlCleaner 接口来实现资源清洗，也就是对于 /member/get/{id} 这个 URL,
+我们可以统一归集到 /member/get/* 资源下，具体的代码实现如下: 需要实现 UrlCleaner接口
+并重写其中的 clean 方法即可
+
+```
+**注意：如果 sentinel 流控规则没有持久化，当我们重启调用 API 所在微服务模块后，规则会
+丢失，需要重新加入** 
+```
+java
+package com.rainbowsea.springcloud.controller;
+
+import com.alibaba.csp.sentinel.adapter.servlet.callback.UrlCleaner;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.stereotype.Component;
+
+
+/**
+ * 方案2： URL 资源清洗
+ * 可以通过 UrlCleaner 接口来实现资源清洗，也就是对于 /member/get/{id} 这个 URL,
+ * 我们可以统一归集到 /member/get/* 资源下，具体的代码实现如下: 需要实现 UrlCleaner接口
+ * 并重写其中的 clean 方法即可
+ */
+
+@Component  // 注意：同样要被 Spring IOC 容器管理起来
+public class CustomUrlCleaner implements UrlCleaner {
+    @Override
+    public String clean(String originUrl) {
+
+        // 判断字符串是否为空 Null
+        // 特别注意: StringUtils.isBlank 是在:org.apache.commons.lang3.StringUtils 包下的
+        if (StringUtils.isBlank(originUrl)) {
+            return originUrl;
+        }
+
+        if (originUrl.startsWith("/member/get")) {
+
+            // 1.如果请求的是接口 /member/get 开头的，比如: /member/get/1
+            // 2.给sentinel 的返回的资源名就是 /member/get/*
+            // 3. 在 sentinel 对 /member/get/* 添加流控规则即可
+            return "/member/get/*";
+        }
+        return originUrl;
+    }
+}
+
+
+```
+
+
+**流量控制实例-线程数**
+当调用  member-service-nacos-provider-10004  的  /member/get/*  接口/API 时，限制 只有一个工作线程，否则直接失败，抛异常.
+> 浏览器输入: http://localhost:10004/member/get/1 ,  快速刷新,  页面显示正常(原因 是服务执行时间很短，刷新下一次的时候，启动的工作线程，已经完成)
+为了看到效果，我们修改下 com/hspedu/springcloud/controller/MemberController.java
+```
+java
+
+
+        // 让线程休眠1s，模拟执行时间
+        try {
+            TimeUnit.MILLISECONDS.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+```
+
+
+**注意事项和细节：** 
+> 当我们请求一次微服务的 API 接口时，后台会启动一个线程.
+
+**阈值类型 QPS 和 线程数的区别讨论** 
+> 如果一个线程**平均执行时间** 为 0.05 秒，就说明在 1秒钟，可以执行 20次(相当于 QPS 为 20)
+> 如果一个线程**平均执行时间** 为 1秒，说明 1 秒钟，可以执行 1次数(相当于 QPS 为1)
+> 如果一个线程**平均执行时间** 为 2 秒，说明2秒钟内，才能执行1次请求。
+
+
+## 流量控制实例-关联
+当关联的资源达到阈值时，就限流自己
+
+当调用 member-service-nacos-provider-10004 的 /t2 API 接口时，如果 QPS 超过 1，这时调用 /t1 API 接口 直接接失败，抛异常.
+老师梳理 /t2 是关联的资源 , 限流的资源是 /t1 
+> 
+> 这里使用 postman 模拟高并发访问/t2 ；然后在 postman 执行高并发访问/t2没有结束时，去访问 /t1 才能
+> 看到流控异常出现。t1被流控了。
+
+## Warm up(冷启动，预热) 介绍
+1. 概述
+ 当流量突然增大的时候，我们常常会希望系统从空闲状态到繁忙状态的切换时间长一些。即如果系统在此
+ 之前长期处于空闲状态，我们希望处理请求的数量是缓步的增多，经过预期的时间以后，到达系统处理请求个数
+ 的最大值，Warm up (冷启动，预热)模式就是为了实现这个目的的。
+**这个场景主要用于额外开销的场景，例如：建立数据库连接等。** 
+官方介绍 Warm Up 地址链接: https://github.com/alibaba/Sentinel/wiki/%E9%99%90%E6%B5%81---%E5%86%B7%E5%90%AF%E5%8A%A8
+> 默认 coldFactor 为 3 ,即请求 QPS 从 threshold / 3 开始，经预热时长逐渐升至设定的QPS阈值。
+> Warm up(冷启动/预热) 
+> 应用场景：秒杀在开启瞬间，大流量很容易造成冲垮系统，Warm up 可慢慢的把流量放入，最终将阈值增长
+> 到设置阈值
+>
+**需求分析/图解：** 
+1. 需求: 通过 Sentinel 实现流量控制，演示 Warm up
+2. 调用: member-service-nacos-provider-10004 的 /t2 API接口，将QPS设置为 9 ,设置 Warm up 值为 3 .
+3. 含义为请求 /t2 的QPS 从threshold/ 3(9/3 = 3) 开始，有预热时长(3秒) 逐渐升至设定的 QPS阈值为(9)
+4. 为什么是  9 /3 ，这个 3 就是默认冷启动启动加载因子 coldFactor = 3
+5. 测试预期效果：在前3秒，如果访问 /t2 的 QPS超过 3,会直接报错，在3秒后，访问 /t2 的QPS 超过 3,小于等于9 ,是正常访问。
+> 浏览器访问:http://localhost:10004/t2 快速刷新页面，在前3秒，会出现流控异常，后3秒就正常了(
+>如果你刷新非常快 QPS > 9 ，仍然会出现流控异常)
+
+**注意事项和细节：** 
+> 测试 Warm up 效果不是很好测，如果出不来可以尝试，调整流控规则: 比如 QPS 为 11，Warm up 预热时间为 6秒
+>  流控规则: 比如 QPS 为 11 ，Warm up 预热时间为 6 秒。
+> 如果请求停止(即: 一段时间没有达到阈值 Warm up 过程将重复，大家可以理解是一个弹性过程)
+ 
+## 排队介绍
+1. 排队方式: 这种方式严格控制了请求通过的间隔时间，也即是让请求以均匀的速度通过，对应的是“漏桶算法”
+2. 一张图: 阈值为QPS=2时，每隔 500ms 才允许通过下一次请求
+3. 这种方式主要用于处理间隔突发的流量，例如：消息队列。比如这样的场景，在某一秒有大量的请求到来。
+而接下来的几秒则处于空闲的状态，我们希望系统能够在接下来的空闲期间逐渐处理这些请求，而不是在第一秒直接
+拒绝多余的请求。
+4. 均速排队，阈值必须设置为QPS
+
+**需求分析:/图解:** 
+1. 需求：通过 Sentinel 实现流量控制-排队
+2. 调用 member-service-nacos-provider-1004 的 t2 API接口，将QPS设置为 1
+3 当调用 /t2 的QPS 超过 1时，不拒绝请求，而是排队等待，依次执行
+4 当等待时间超过 10 ，则为等待超时
+修改：代码: 模拟延时 10s
+```
+java
+
+    @GetMapping("/t2")
+    public Result t2() {
+
+        // 让线程休眠 1s，模拟执行时间为1s=>当多少个请求就会造成超时
+        try {
+            TimeUnit.MILLISECONDS.sleep(1000);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+
+        // 输出线程信息
+        log.info("执行t2()，线程id={}",Thread.currentThread().getId());
+        return Result.success("t2执行成功");
+    }
+
+```
+> 演示: 浏览器访问  http://localhost:10004/t2  快速刷新页面 9 次，观察前台/后台输出的情
+      况
+> 2025-01-12 10:28:00.735  INFO 26800 --- [io-10004-exec-6] c.r.s.controller.MemberController        : 执行t2()，线程id=67
+  2025-01-12 10:28:01.739  INFO 26800 --- [io-10004-exec-8] c.r.s.controller.MemberController        : 执行t2()，线程id=69
+  2025-01-12 10:28:02.749  INFO 26800 --- [io-10004-exec-7] c.r.s.controller.MemberController        : 执行t2()，线程id=68
+  2025-01-12 10:28:03.737  INFO 26800 --- [io-10004-exec-2] c.r.s.controller.MemberController        : 执行t2()，线程id=63
+> 输出结果分析： 没有报错误，后台请求排队执行，每隔1s匀速执行
+> 浏览器访问  http://localhost:10004/t2  快速刷新页面 20 次，当请求等待时间超过 10S, 仍然出现流控异常
+
+## Sentinel 熔断降级
+**线程堆积引出熔断降级** 
+文档地址:https://sentinelguard.io/zh-cn/docs/circuit-breaking.html
+> 线程堆积引出熔断降级
+> 1. 一个服务常常会调用别的模块，可能是另外的一个远程服务，数据库，或者第三方API等【架构图】
+> 2. 例如: 支付的时候，可能需要远程调用银联提供的API：查询某个商品的价格，可能需要进行数据库查询。
+>然而，这个被依赖的服务的稳定性是不能保证的。如果依赖的服务出现了不稳定的请求，请求的响应时间变长，那么调用
+>服务的方法的响应时间也会变长，线程会产生堆积，最终可能耗尽业务自身的线程池，服务本身也变得不可用。
+>这时，我们对**不稳定的服务进行熔断降级** ，让其快速返回结果，不要造成线程堆积
+>
+>
+>
+图解说明：
+* 现代微服务架构都是分布式的，由非常多个的服务组成，不同服务之间相互调用，组成复杂的调用链路。
+* 链路调用中会产生放大的效果，复杂链路的某一环不稳定，就可能会层层级联，最终导致整个链路都不可用。
+* 因此需要对不稳定的弱依赖服务调用进行熔断降级，暂时切断不稳定调用，避免局部不稳定因素导致整体的雪崩。
+
+**熔断，降级，限流 三者的关系** 
+* 熔断强调的是服务之间的调用的能实现自我恢复的状态*
+* 限流是从系统的流量入口考虑，从进入的流量上进行限制，达到保护系统的作用。
+* 降级，是从系统业务的维度考虑，流量大了或者频繁异常，可以牺牲一些非核心业务，保护核心流程正常使用。
+**梳理：** 
+> 熔断是降级方式的一种
+> 降级又是限流的一种
+> 三者都是为了通过一定的方式在流量过大或者出现异常时，保护系统的手段。
+
+慢调用比例：
+1. 慢调用比例:(SLOW_REQUEST_RATIO) :选择以慢调用比例作为阈值，需要设置允许的慢调用RT（即
+最大的响应时间），请求的响应时间大于该值则统计为慢调用。
+2. 当单位统计时长(statIntervalMs) 内请求数目大于设置的最小请求数目，并且慢调用的比例大于阈值，则
+接下来的熔断时长内请求会自动被熔断。
+3. 熔断时长后，熔断器会进入探测恢复状态(HALF-OPEN状态)，若接下来的一个请求响应时间小于设置的
+慢调用RT则结束熔断，若大于设置的慢调用RU则会再次熔断
+**异常比例：** 
+1. 异常比例(ERROR_RATIO) ： 当单位统计时长(sataIntervalMs)内请求数目大于设置的最小请求
+数目，并且异常的比例大于阈值，则接下来的熔断时长内请求会自动被熔断。
+2. 经过熔断时长后熔断器会进入探测恢复状态(HALF-OPEN状态)
+3. 若接下来的一个请求成功完成(没有错误)则结束熔断，否则会再次被熔断
+4. 异常比率的阈值范围是[0.0,1.0],代表0%~100%
+
+**异常数** 
+1. 异常数(ERROR_COUNT) ；当单位统计时长内的异常数目超过阈值之后会自动进行熔断
+2. 经过熔断时长后熔断器会进入探测恢复状态(HALF-OPFE状态)
+3. 若接下来的一个请求成功完成(没有错误)则会结束熔断，否则会再次被熔断
+
+**演示慢调用比例：** 
+```
+java
+    @GetMapping("/t3")
+    public Result t3() {
+        try {
+            // 让线程休眠300毫秒，模拟执行时间
+            TimeUnit.MILLISECONDS.sleep(300);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        return Result.success("t3()执行成功");
+    }
+
+```
+
+
+**演示 通过 Sentinel  实现  熔断降级控制**
+2. 当调用 member-service-nacos-provider-10004 的 /t4 API 接口时，当资源的每秒请求 量>=5，
+并且每秒异常总数占通过量的比值超过 20%(即异常比例到 20%), 断路器打开(即: 进入降级状态), 
+让 /t4 API 接口 微服务不可用
+3.  当对/t4 API 接口  访问降到  1S 内 1 个请求，降低访问量了，断路器关闭，5 秒后微服 务恢复
+
+**熔断降级实例-异常数**
+10.5.7.1 需求分析/图解
+1.  需求: 通过Sentinel实现熔断降级控制
+2. 当调用 member-service-nacos-provider-10004 的/t5API 接口时，当资源的每分钟请求量>=5，
+并且每分钟异常总数>=5 , 断路器打开(即: 进入降级状态), 让 /t5 API 接口 微服务不可用
+3.  当熔断时间(比如 20S)结束后，断路器关闭,  微服务恢复
+
+**说明:** 
+> 资源在1分钟的异常数目超过阈值之后会进行熔断降级
+> 当异常数统计是分钟级别的，若设置的时间窗口小于 60 s,则结束熔断状态仍可能再进入
+>熔断状态，测试时，最后将时间窗口设置超过60s
+>
+
+
+## **sentinel 热点规则：** 
+一个问题引出热点key限流
+1.热点: 热点即经常访问的数据。很多时候我们希望统计热点数据中，访问频次最高的 Top K 数据，并对其访问进行限制。
+2. 比如：某条新闻上**热搜** ，在某段时间内高频访问，为了防止系统雪崩，可以对该条新闻进行热点限流
+热点规则官方地址: https://github.com/alibaba/Sentinel/wiki/%E7%83%AD%E7%82%B9%E5%8F%82%E6%95%B0%E9%99%90%E6%B5%81
+```
+text
+何为热点？热点即经常访问的数据。很多时候我们希望统计某个热点数据中访问频次最高的 Top K 数据，并对其访问进行限制。比如：
+
+商品 ID 为参数，统计一段时间内最常购买的商品 ID 并进行限制
+用户 ID 为参数，针对一段时间内频繁访问的用户 ID 进行限制
+热点参数限流会统计传入参数中的热点参数，并根据配置的限流阈值与模式，对包含热点参数的资源调用进行限流。热点参数限流可以看做是一种特殊的流量控制，仅对包含热点参数的资源调用生效。
+
+Sentinel Parameter Flow Control
+
+Sentinel 利用 LRU 策略统计最近最常访问的热点参数，结合令牌桶算法来进行参数级别的流控。热点参数限流支持集群模式。
+
+```
+* 热点参数限流会统计传入参数的热点参数，并根据配置的限流阈值与模式，对包含热点参数的资源进行限流
+* 热点参数限流可以看做是一种特殊的流量控制，仅对包含热点参数的资源调用生效。
+* Sentinel 利用LRU策略统计最近最常访问的热点参数，结合**令牌桶算法** 来进行参数级别的流控:https://blog.csdn.net/qq_34416331/article/details/106668747
+* 热点参数限流支持集群模式。
+
+**演示：热点规则：** 
+需求:  通过 Sentinel  实现  热点 Key 限流
+2.  对  member-service-nacos-provider-10004  的  /news?id=x&type=x API 接口进行热点限 流
+3.  假定 id=10  这一条新闻是当前的热点新闻， 当查询新闻时，对通常的 id(非热点新闻) 请求  QPS 限定为 2,  如果 id=10 QPS 限定为 100
+4.  如果访问超出了规定的 QPS,  触发热点限流机制,    调用自定义的方法，给出提示信息.
+5.  当对  /news?id=x&type=x API 接口  降低访问量，QPS 达到规定范围,  服务恢复
+独立设置热点 id=10 的 QPS 阈值(即添加例外)
+
+**注意事项和细节:** 
+* 热点参数类型是(byte/int/long/float/double/char/String)
+* 热点参数值，可以配置多个
+* 热点规则只对指定的参数生效(比如本实例对id生效，对type不生效)
+
+## 系统规则:
+如我们系统最大性能能抗  100QPS,  如何分配  /t1 /t2  的 QPS?
+2.  方案 1:    /t1  分配  QPS=50 /t2  分配  QPS=50 ,  问题,  如果/t1  当前 QPS 达到  50 ,  而 /t2 的  QPS 才 10,  会造成没有充分利用服务器性能.
+3.  方案 2:    /t1  分配  QPS=100 /t2  分配  QPS=100 ,  问题,  容易造成  系统没有流量保护， 造成请求线程堆积，形成雪崩.
+4.  有没有对各个  资源请求的  QPS 弹性设置,  只要总数不超过系统最大 QPS 的流量保护规 则? ==>  系统规则
+系统处理请求的过程想象为一个水管，到来的请求是往这个水管灌水，当系统处理顺 畅的时候，请求不需要排队，直接从水管中穿过，这个请求的RT是最短的；
+,反之，当请求堆积的时候，那么处理请求的时间则会变为：排队时间  +  最短处理时间
+
+**演示:系统规则:** 
+需求:  通过 Sentinel  实现  系统规则-入口 QPS
+2.  对  member-service-nacos-provider-10004  的  所有  API 接口进行流量保护，不管访问 哪个  API 接口,  系统入口总的 QPS    不能大于 2,  大于 2，就进行限流控制
+3.    提示: 上面的 QPS 是老师为了方便看效果,  设置的很小
+说明: 当配置的资源名 news  触发限流机制时，会调用  newsBlockHandler      方法 2.    上面的处理方案存在一些问题
+     每个@SentinelResource 对应一个异常处理方法，会造成方法很多
+     异常处理方法和资源请求方法在一起，不利于业务逻辑的分离
+     解决方案->  自定义全局限流处理类.
+
+
+## @SentinelResource  自定义全局限流处理类
+> 注意：blockHandler 只负责sentine控制台配置违规的异常
+> 而 fallback 负责 java异常/业务异常
+                                                                                                                                                                                                                
+如果希望忽略某个异常，可以使用 exceptionsToIgnore
+如果希望忽略某个异常(支持数组)，可以使用 exceptionsToIgnore
+```
+java
+// 这里我们使用全局限流处理类，显示限流信息
+
+    /**
+     * value="t6" 表示 sentinel 限流资源的名字
+     * blockHandlerClass = CustomGlobalBlockHandler.class:全局限流处理类
+     * blockHandler = "handlerMethod1" 指定使用全局限流处理类哪个方法，来处理限流信息
+     * fallbackClass = CustomGlobalFallbackHandler.class 全局 fallback处理类
+     * fallback = "fallbackHandlerMethod1" 指定使用全局fallback处理类哪个方法来处理java异常/业务异常
+     * exceptionsToIgnore = {NullPointerException.class}
+     * @return
+     */
+    @GetMapping("/t6")
+    @SentinelResource(value = "t6",
+            //   //设置处理sentinel 控制台违规后的异常 blockHand
+            blockHandlerClass = CustomGlobalBlockHandler.class,
+            blockHandler = "handlerMethod1",
+    //设置处理Java异常的 fallback
+            fallbackClass = CustomGlobalFallbackHandler.class,
+            fallback = "fallbackHandlerMethod1",
+
+            // 如果希望忽略某个异常，可以使用 exceptionsToIgnore，这里忽略NullPointerException异常
+            exceptionsToIgnore = {NullPointerException.class}
+    )
+    public Result t6() {
+        log.info("执行t6() 线程id={}", Thread.currentThread().getId());
+
+
+        // 假定；当访问t6资源次数是5倍数时，就出现Java异常
+        if (++num % 5 == 0) {
+            throw new NullPointerException("null 指针异常 num=" + num);
+        }
+
+        if (++num % 6 == 0) {
+            throw new RuntimeException("RuntimeException  num=" + num);
+        }
+        return Result.success("200", "t6()执行OK~~~");
+    }
+
+```
+
+https://github.com/alibaba/Sentinel/wiki/%E6%B3%A8%E8%A7%A3%E6%94%AF%E6%8C%81
+https://github.com/alibaba/Sentinel/wiki/注解支持
+@SentinelResource 注解
+注意：注解方式埋点不支持 private 方法。
+
+@SentinelResource 用于定义资源，并提供可选的异常处理和 fallback 配置项。 @SentinelResource 注解包含以下属性：
+
+value：资源名称，必需项（不能为空）
+entryType：entry 类型，可选项（默认为 EntryType.OUT）
+blockHandler / blockHandlerClass: blockHandler 对应处理 BlockException 的函数名称，
+可选项。blockHandler 函数访问范围需要是 public，返回类型需要与原方法相匹配，参数类型需要和原方法相匹配并且最后加一个额外的参数，类型为 BlockException。blockHandler 函数默认需要和原方法在同一个类中。若希望使用其他类的函数，则可以指定 blockHandlerClass 为对应的类的 Class 对象，注意对应的函数必需为 static 函数，否则无法解析。
+fallback / fallbackClass：fallback 函数名称，可选项，用于在抛出异常的时候提供 fallback 处理逻辑。fallback 函数可以针对所有类型的异常（除了 exceptionsToIgnore 里面排除掉的异常类型）进行处理。fallback 函数签名和位置要求：
+返回值类型必须与原函数返回值类型一致；
+方法参数列表需要和原函数一致，或者可以额外多一个 Throwable 类型的参数用于接收对应的异常。
+fallback 函数默认需要和原方法在同一个类中。若希望使用其他类的函数，则可以指定 fallbackClass 为对应的类的 Class 对象，注意对应的函数必需为 static 函数，否则无法解析。
+defaultFallback（since 1.6.0）：默认的 fallback 函数名称，可选项，通常用于通用的 fallback 逻辑（即可以用于很多服务或方法）。默认 fallback 函数可以针对所有类型的异常（除了 exceptionsToIgnore 里面排除掉的异常类型）进行处理。若同时配置了 fallback 和 defaultFallback，则只有 fallback 会生效。defaultFallback 函数签名要求：
+返回值类型必须与原函数返回值类型一致；
+方法参数列表需要为空，或者可以额外多一个 Throwable 类型的参数用于接收对应的异常。
+defaultFallback 函数默认需要和原方法在同一个类中。若希望使用其他类的函数，则可以指定 fallbackClass 为对应的类的 Class 对象，注意对应的函数必需为 static 函数，否则无法解析。
+exceptionsToIgnore（since 1.6.0）：用于指定哪些异常被排除掉，不会计入异常统计中，也不会进入 fallback 逻辑中，而是会原样抛出。
+1.8.0 版本开始，defaultFallback 支持在类级别进行配置。
+
+注：1.6.0 之前的版本 fallback 函数只针对降级异常（DegradeException）进行处理，不能针对业务异常进行处理。
+
+特别地，若 blockHandler 和 fallback 都进行了配置，则被限流降级而抛出 BlockException 时只会进入 blockHandler 处理逻辑。若未配置 blockHandler、fallback 和 defaultFallback，则被限流降级时会将 BlockException 直接抛出（若方法本身未定义 throws BlockException 则会被 JVM 包装一层 UndeclaredThrowableException）。

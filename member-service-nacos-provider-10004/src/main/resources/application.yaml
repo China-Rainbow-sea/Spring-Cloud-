@@ -8,6 +8,22 @@ spring:
     nacos:
       discovery:
         server-addr: localhost:8848 # 配置注册到哪个 Nacos Server的地址
+    # 配置 Sentinel 的信息
+    sentinel:
+      transport:
+        dashboard: localhost:9090 # 注意这里按照你自己配置的 sentinel 端口信息，默认是8080端口
+        # 解读: spring.cloud.sentinel.transport.port
+        # 1. spring.cloud.sentinel.transport.port 端口配置会在被监控的微服务当中
+
+        # 对应的机器上启动一个 Http Server
+        # 2. 该 Server 会 与 Sentinel 控制台做交互
+        # 3. 比如: Sentinel 控制台添加了 1 个限流规则，会把规则数据 push 给这个
+        # Http Server 接收，Http Server 再将规则注册到 Sentinel 当中
+        # 简单的说明: spring.cloud.sentinel.transport.port: 指定被监控的微服务应用与
+        # Sentinel 控制台交互的端口，微服务应用本地会起一个该端口占用的 Http Server
+        port: 8719 # 默认的占用的端口是 8719,假如被占用了，会自动从 8719开始依次 + 1 进行一个扫描，
+        # 直到找到为占用的端口，进行一个使用。
+
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource # 配置 alibaba 的数据库连接池
     password: MySQL123

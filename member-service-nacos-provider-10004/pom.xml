@@ -14,6 +14,14 @@
 
     <!--    引入相关的依赖-->
     <dependencies>
+
+        <!-- 引入 alibaba-sentinel -->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+
+
         <!-- 在微服务模块引入 nacos-discovery starter -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>
