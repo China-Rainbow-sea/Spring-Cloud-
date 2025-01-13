@@ -10,4 +10,18 @@ spring:
       discovery:
         server-addr: localhost:8848 # 配置 nacos server的地址
 
+    sentinel:
+      transport:
+        dashboard: localhost:9090 # 指定 sentinel 控制台地址(dash board)
+        port: 8719 # 设置端口默认是 8719 如果该端口被占用,就自动从8791+1进行扫描,直到找到一个没有占用的端口.
 
+# 设置暴露所有的监控点
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+# openfeign 和 sentinel 整合,必须配置
+feign:
+  sentinel:
+    enabled: true

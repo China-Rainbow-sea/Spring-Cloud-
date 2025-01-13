@@ -1609,3 +1609,20 @@ exceptionsToIgnore（since 1.6.0）：用于指定哪些异常被排除掉，不
 注：1.6.0 之前的版本 fallback 函数只针对降级异常（DegradeException）进行处理，不能针对业务异常进行处理。
 
 特别地，若 blockHandler 和 fallback 都进行了配置，则被限流降级而抛出 BlockException 时只会进入 blockHandler 处理逻辑。若未配置 blockHandler、fallback 和 defaultFallback，则被限流降级时会将 BlockException 直接抛出（若方法本身未定义 throws BlockException 则会被 JVM 包装一层 UndeclaredThrowableException）。
+
+
+整合 Openfeign 和 Sentinel
+在 member-service-nacos-consumer-80 调用某个无效服务时,启动Sentinel的熔断降级机制,
+能够快速返回响应,而不是使用默认的超时机制(因为超时机制容易线程堆积,从而导致雪崩) 
+> OpenFeign 默认超时时间 1秒钟,即等待返回结果 1秒
+> 测试: 让 10004 服务对应的API执行时间很长(比如休眠2秒),这时openfeign 去调用会怎么样
+> 如果 10004 对应的API响应时间比 10006 明显长,这时候,你会发现 openfeign+sentinel整合后
+> 会自动响应时间上更短的哪个服务,这时总是调用 10006的API(响应时间更短)
+```
+xml
+# openfeign 和 sentinel 整合,必须配置
+feign:
+  sentinel:
+    enabled: true
+
+```

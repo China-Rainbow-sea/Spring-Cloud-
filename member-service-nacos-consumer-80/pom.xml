@@ -15,6 +15,20 @@
     <!--    引入相关的依赖：我们引入了当前所需要的依赖，后面如果有其它的需要，再灵活添加-->
     <dependencies>
 
+        <!--        整合 sentinel 服务监控-->
+        <!--        引入 sentinel starter 即场景启动器 starter-->
+        <dependency>
+            <groupId>com.alibaba.cloud</groupId>
+            <artifactId>spring-cloud-starter-alibaba-sentinel</artifactId>
+        </dependency>
+
+        <!--        整合Openfeign -->
+        <!--        引入 openfeign starter 即场景启动器 starter-->
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-openfeign</artifactId>
+        </dependency>
+
         <!--引入 alibaba-nacos -discovery   -->
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

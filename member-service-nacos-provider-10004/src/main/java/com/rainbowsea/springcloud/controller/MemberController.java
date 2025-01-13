@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.annotation.Resource;
-import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
@@ -39,6 +38,7 @@ public class MemberController {
      * fallbackClass = CustomGlobalFallbackHandler.class 全局 fallback处理类
      * fallback = "fallbackHandlerMethod1" 指定使用全局fallback处理类哪个方法来处理java异常/业务异常
      * exceptionsToIgnore = {NullPointerException.class}
+     *
      * @return
      */
     @GetMapping("/t6")
@@ -46,7 +46,7 @@ public class MemberController {
             //   //设置处理sentinel 控制台违规后的异常 blockHand
             blockHandlerClass = CustomGlobalBlockHandler.class,
             blockHandler = "handlerMethod1",
-    //设置处理Java异常的 fallback
+            //设置处理Java异常的 fallback
             fallbackClass = CustomGlobalFallbackHandler.class,
             fallback = "fallbackHandlerMethod1",
 
@@ -202,18 +202,19 @@ public class MemberController {
     //@RequestMapping(value = "/member/get/", params = "id", method = RequestMethod.GET)
     //public Result getParameter(Long id) {
     @GetMapping("/member/get/{id}")
-    public Result getMemberById(@PathVariable("id") Long id, HttpServletRequest request) {
+    //public Result getMemberById(@PathVariable("id") Long id, HttpServletRequest request) {
+    public Result getMemberById(@PathVariable("id") Long id) {
         Member member = memberService.queryMemberById(id);
-        String color = request.getParameter("color");
-        String age = request.getParameter("age");
+        //String color = request.getParameter("color");
+        //String age = request.getParameter("age");
 
 
         // 让线程休眠1s，模拟执行时间
-        try {
-            TimeUnit.MILLISECONDS.sleep(1000);
+      /*  try {
+            TimeUnit.MILLISECONDS.sleep(2000);
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
+        }*/
 
         // 模拟超时 ,这里暂停 5秒
        /* try {
@@ -227,7 +228,8 @@ public class MemberController {
 
         // 使用 Result 把查询到的结果返回
         if (member != null) {
-            return Result.success("查询会员成功 member-service-nacos-provider-10004  color" + color + "age" + age, member);
+            //return Result.success("查询会员成功 member-service-nacos-provider-10004  color" + color + "age" + age, member);
+            return Result.success("查询会员成功 member-service-nacos-provider-10004  color" + member);
             //return Result.success("查询会员成功 member-service-nacos-provider-10004  color",member);
         } else {
             return Result.error("402", "ID" + id + "不存在 member-service-nacos-provider-10004 ");

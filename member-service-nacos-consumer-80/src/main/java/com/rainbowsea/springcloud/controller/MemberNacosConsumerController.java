@@ -3,6 +3,7 @@ package com.rainbowsea.springcloud.controller;
 
 import com.rainbowsea.springcloud.entity.Member;
 import com.rainbowsea.springcloud.entity.Result;
+import com.rainbowsea.springcloud.service.MemberOpenFeignService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -28,6 +29,21 @@ public class MemberNacosConsumerController {
     private RestTemplate restTemplate;
     @Resource // 装配到 Spring ioc 容器当中
     private DiscoveryClient discoveryClient;
+
+
+    // 装配 MemberOpenFeignService
+    @Resource
+    private MemberOpenFeignService memberOpenFeignService;
+
+
+    // 编写方法通过openfeign 实现远程调用
+    @GetMapping("/member/openfeign/consumer/get/{id}")
+    public Result<Member> getMemberOpenfeignById(@PathVariable("id") Long id) {
+        // 这里我们使用openfeign 接口方式远程调用
+        log.info("调用方式是 openfeign...");
+        return memberOpenFeignService.getMemberById(id);
+    }
+
 
     @PostMapping("/member/nacos/consumer/save")
     public Result<Member> save(Member member) {
