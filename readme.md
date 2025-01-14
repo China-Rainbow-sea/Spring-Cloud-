@@ -1626,3 +1626,110 @@ feign:
     enabled: true
 
 ```
+
+
+## 规则持久化
+> 规则没有持久化的问题：如果 sentinel 流控规则没有持久化，当重启调用 API/接口所在微服务后，
+> 规则就会丢失，需要重新加入。解决方案：通过 Nacos 进行持久化
+规则持久化的方案:
+* 阿里云Ahas(最方便/付费)
+* 在 Nacos Server 配置规则，完成持久化-官方推荐
+* datasource 支持 nacos,redis,apollo,zk,file
+Nacos Server 配置中心-规则持久化实例:
+```
+json
+[
+    {
+        "resource": "/member/openfeign/consumer/get/1",
+        "limitApp": "default",
+        "grade": 1,
+        "count": 1,
+        "strategy": 0,
+        "controlBehavior": 0,
+        "clusterMode": false
+    }
+]
+
+```
+在 Nacos Server  配置中心增加 Sentinel 客户端/微服务模块  的流控规则参数说明
+    resource∶资源名称;
+    limlitApp∶  来源应用;
+    grade∶阈值类型，0表示线程数，1表示QPS;
+    count∶单机阈值;
+    strategy∶流控模式，0表示直接，1表示关联，2表示链路;
+    controlBehavior∶流控效果，0表示快速失败，1表示Warm Up，2表示排队等待;
+    clusterMode∶是否集群
+    
+修改 member-service-nacos-consumer-80  的  pom.xml, 加入 sentinel  和  nacos 持久化整合依赖
+```
+xml
+<!--        引入 sentinel 和 nacos 持久化整合依赖，使用版本仲裁-->
+        <dependency>
+            <groupId>com.alibaba.csp</groupId>
+            <artifactId>sentinel-datasource-nacos</artifactId>
+        </dependency>
+
+```
+
+在application.yaml 当中配置 rule-typle 规则:
+```
+yaml
+spring:
+  application:
+    name: member-service-nacos-consumer-80
+  #配置 nacos 注册中心
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 配置 nacos server的地址
+    sentinel:
+      transport:
+        dashboard: localhost:9090 # 指定 sentinel 控制台地址(dash board)
+        port: 8719 # 设置端口默认是 8719 如果该端口被占用,就自动从8791+1进行扫描,直到找到一个没有占用的端口.
+      datasource:
+        ds1:
+          # 流控规则配置是从 nacos server 配置中心获取
+          nacos:
+            server-addr: localhost:8848 # 指定 nacos server 配置中心地址
+            dataId: member-service-nacos-consumer # nacos server 配置中心当中对应的ID保持一致，一定要保持一致才行
+            groupId: DEFAULT_GROUP # 指定组[nacos server配置中心]
+            data-type: json # 指定配置流控规则的数据类型
+            rule-type: flow # 规则类型：流控规则 表示可以看文档
+
+
+```
+
+```
+yaml
+      datasource:
+        ds1:
+          # 流控规则配置是从 nacos server 配置中心获取
+          nacos:
+            server-addr: localhost:8848 # 指定 nacos server 配置中心地址
+            dataId: member-service-nacos-consumer # nacos server 配置中心当中对应的ID保持一致，一定要保持一致才行
+            groupId: DEFAULT_GROUP # 指定组[nacos server配置中心]
+            data-type: json # 指定配置流控规则的数据类型
+            rule-type: flow # 规则类型：流控规则 表示可以看文档
+
+ rule-type: flow # 规则类型：流控规则 表示可以看文档 有:flow流量控制,degrade熔断降级规则，system系统保护规则，authority 访问控制规则
+
+
+```
+```
+java
+public enum RuleType {
+    FLOW("flow", FlowRule.class),
+    DEGRADE("degrade", DegradeRule.class),
+    PARAM_FLOW("param-flow", ParamFlowRule.class),
+    SYSTEM("system", SystemRule.class),
+    AUTHORITY("authority", AuthorityRule.class),
+    GW_FLOW("gw-flow", "com.alibaba.csp.sentinel.adapter.gateway.common.rule.GatewayFlowRule"),
+    GW_API_GROUP("gw-api-group", "com.alibaba.csp.sentinel.adapter.gateway.common.api.ApiDefinition");
+
+```
+
+其它规则的种类-配置文档: https://sentinelguard.io/zh-cn/docs/basic-api-resource-rule.html
+
+
+## SpringCloud Alibaba Seata 分布式事务管理
+

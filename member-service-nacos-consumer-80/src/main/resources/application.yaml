@@ -14,6 +14,17 @@ spring:
       transport:
         dashboard: localhost:9090 # 指定 sentinel 控制台地址(dash board)
         port: 8719 # 设置端口默认是 8719 如果该端口被占用,就自动从8791+1进行扫描,直到找到一个没有占用的端口.
+      datasource:
+        ds1:
+          # 流控规则配置是从 nacos server 配置中心获取
+          nacos:
+            server-addr: localhost:8848 # 指定 nacos server 配置中心地址
+            dataId: member-service-nacos-consumer # nacos server 配置中心当中对应的ID保持一致，一定要保持一致才行
+            groupId: DEFAULT_GROUP # 指定组[nacos server配置中心]
+            data-type: json # 指定配置流控规则的数据类型
+            rule-type: flow # 规则类型：流控规则 表示可以看文档
+
+
 
 # 设置暴露所有的监控点
 management:
