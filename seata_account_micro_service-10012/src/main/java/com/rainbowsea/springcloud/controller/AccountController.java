@@ -19,7 +19,7 @@ public class AccountController {
     public Result reduce(@RequestParam("userId") Long userId, @RequestParam("money") Integer money) {
         //模拟异常,超时
         //openfeign 接口调用默认超时时间为1s
-     /*   try {
+/*        try {
             TimeUnit.SECONDS.sleep(12);
         } catch (InterruptedException e) {
             e.printStackTrace();

@@ -2039,3 +2039,25 @@ java
         log.info("====创建订单 end=====");
     }
 ```
+
+注意
+```
+conf
+
+vgroup_mapping.hspedu_order_tx_group = "default"
+
+service {
+  #vgroup->rgroup
+  # vgroup_mapping.my_test_tx_group = "default"
+  vgroup_mapping.hspedu_order_tx_group = "default"
+  #only support single node
+  default.grouplist = "127.0.0.1:8091"
+  #degrade current not support
+  enableDegrade = false
+  #disable
+  disable = false
+  #unit ms,s,m,h,d represents milliseconds, seconds, minutes, hours, days, default permanent
+  max.commit.retry.timeout = "-1"
+  max.rollback.retry.timeout = "-1"
+}
+```
