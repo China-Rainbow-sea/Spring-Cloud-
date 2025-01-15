@@ -1732,4 +1732,310 @@ public enum RuleType {
 
 
 ## SpringCloud Alibaba Seata 分布式事务管理
+分布式微服务架构下的全局数据一致性问题  [即:  分布式事务问题] ，解决方案: SpringCloud Alibaba Seata 
+官方地址： http://seata.io/zh-cn/
+使用手册：https://seata.apache.org/zh-cn/docs/overview/what-is-seata/
+**Seata 是什么？** 
+一句话: Seata 是一款开源的分布式事务解决方案，致力于在微服务架构下提供高性能和简单易用的分布式事务服务。
 
+**创建对应 Seata 需要的数据库** 
+```
+sql
+
+#创建 seata  数据库
+CREATE DATABASE seata
+USE seata
+```
+在 seata 数据库创建表，使用 seata 提供的 sql 脚本即可，在 seata 的 \conf\db_store.sql
+```
+sql
+-- the table to store GlobalSession data
+drop table if exists `global_table`;
+create table `global_table` (
+  `xid` varchar(128)  not null,
+  `transaction_id` bigint,
+  `status` tinyint not null,
+  `application_id` varchar(32),
+  `transaction_service_group` varchar(32),
+  `transaction_name` varchar(128),
+  `timeout` int,
+  `begin_time` bigint,
+  `application_data` varchar(2000),
+  `gmt_create` datetime,
+  `gmt_modified` datetime,
+  primary key (`xid`),
+  key `idx_gmt_modified_status` (`gmt_modified`, `status`),
+  key `idx_transaction_id` (`transaction_id`)
+);
+
+-- the table to store BranchSession data
+drop table if exists `branch_table`;
+create table `branch_table` (
+  `branch_id` bigint not null,
+  `xid` varchar(128) not null,
+  `transaction_id` bigint ,
+  `resource_group_id` varchar(32),
+  `resource_id` varchar(256) ,
+  `lock_key` varchar(128) ,
+  `branch_type` varchar(8) ,
+  `status` tinyint,
+  `client_id` varchar(64),
+  `application_data` varchar(2000),
+  `gmt_create` datetime,
+  `gmt_modified` datetime,
+  primary key (`branch_id`),
+  key `idx_xid` (`xid`)
+);
+
+-- the table to store lock data
+drop table if exists `lock_table`;
+create table `lock_table` (
+  `row_key` varchar(128) not null,
+  `xid` varchar(96),
+  `transaction_id` long ,
+  `branch_id` long,
+  `resource_id` varchar(256) ,
+  `table_name` varchar(32) ,
+  `pk` varchar(36) ,
+  `gmt_create` datetime ,
+  `gmt_modified` datetime,
+  primary key(`row_key`)
+);
+
+
+```
+
+修改 seata 的\cof\reistry.conf ，配置注册中心的 nacos server
+seata 链接 Mysql 8 的配置
+https://blog.csdn.net/stephen_curry300/article/details/121585707
+```yaml
+驱动的名称：com.mysql.cj.jdbc.Driver
+url地址：“jdbc:mysql://127.0.0.1:3306/seata?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true”
+```
+```
+yaml
+    ## driver-class-name = "com.mysql.jdbc.Driver"
+    driver-class-name = "com.mysql.cj.jdbc.Driver"
+    ## url = "jdbc:mysql://127.0.0.1:3306/seata"
+    url = "jdbc:mysql://127.0.0.1:3306/seata?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true"
+```
+
+
+**创建业务数据库和表**
+
+```
+
+sql
+
+--  订单微服务的数据库
+CREATE DATABASE order_micro_service 
+USE order_micro_service
+
+CREATE TABLE `order`(
+id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY,
+user_id BIGINT DEFAULT NULL ,
+product_id BIGINT DEFAULT NULL ,
+nums INT DEFAULT NULL ,
+money INT DEFAULT NULL,
+`status` INT DEFAULT NULL COMMENT '0：创建中; 1：已完结' );
+
+SELECT * FROM `order`
+
+
+
+-- 库存微服务的数据库`storage``order` 
+CREATE DATABASE storage_micro_service 
+USE storage_micro_service
+
+CREATE TABLE `storage`(
+id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY, 
+product_id BIGINT DEFAULT NULL ,
+amount INT DEFAULT NULL COMMENT '库存量' );
+
+--  初始化库存表
+INSERT INTO `storage` 
+VALUES(NULL, 1, 10); 
+
+SELECT * FROM `storage`
+
+--  账号微服务的数据库
+CREATE DATABASE account_micro_service 
+USE account_micro_service
+
+CREATE TABLE `account`(
+id BIGINT NOT NULL AUTO_INCREMENT PRIMARY KEY , 
+user_id BIGINT DEFAULT NULL ,
+money INT DEFAULT NULL COMMENT '账户金额' );
+
+--  初始化账户表
+INSERT INTO `account` VALUES(NULL, 666, 10000);
+
+SELECT * from `account`
+
+
+```
+
+
+分别为 3 个数据库创建对应的回滚日志表，说明回滚日志表在 seata 的 \conf\db_undo_log.sql
+```
+sql
+-- the table to store seata xid data
+-- 0.7.0+ add context
+-- you must to init this sql for you business databese. the seata server not need it.
+-- 此脚本必须初始化在你当前的业务数据库中，用于AT 模式XID记录。与server端无关（注：业务数据库）
+-- 注意此处0.3.0+ 增加唯一索引 ux_undo_log
+drop table `undo_log`;
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  `ext` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+```
+
+```
+sql
+
+
+
+use order_micro_service	
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  `ext` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+
+
+use storage_micro_service
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  `ext` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+
+
+
+use account_micro_service
+CREATE TABLE `undo_log` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `branch_id` bigint(20) NOT NULL,
+  `xid` varchar(100) NOT NULL,
+  `context` varchar(128) NOT NULL,
+  `rollback_info` longblob NOT NULL,
+  `log_status` int(11) NOT NULL,
+  `log_created` datetime NOT NULL,
+  `log_modified` datetime NOT NULL,
+  `ext` varchar(100) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `ux_undo_log` (`xid`,`branch_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
+```
+
+对应 seata_storage_micro_service 的 application.yaml 的配置
+```
+yaml
+
+server:
+  port: 10010
+spring:
+  application:
+    name: seata_storage_micro_service
+  cloud:
+    alibaba:
+      seata:
+        # 指定事务组名，需要和 seata-server中的对应 /conf/file.conf 当中的匹配
+        #  vgroup_mapping.my_test_tx_group = "hspedu_order_tx_group"
+        tx-service-group: hspedu_order_tx_group
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 指定 nacos server 地址
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver # 注意: 这里我们配置的是 mysql8.0版本的
+    url: jdbc:mysql://localhost:3306/storage_micro_service
+    username: root
+    password: MySQL123
+# 配置 seata日志输出
+logging:
+  level:
+    io:
+      seata: info
+
+mybatis:
+  mapperLocations: classpath:mapper/*.xml
+
+```
+
+创建 file.conf, 进行相关的配置   说明：该文件从  seata  的\conf\file.conf 拷贝，进行修 ,
+改即可
+
+**集成测试(3)  三个微服务协同完成-使用@GlobalTransactional 完成分布式事务控制 (出现异常，也能保证数据一致性)**
+
+```
+
+java
+
+
+    @Override
+    /**
+     * 老师解读
+     * 1. @GlobalTransactional : 分布式全局事务控制  io.seata.spring.annotation包
+     * 2. name = "hspedu-save-order" 名称，程序员自己指定,保证唯一即可
+     * 3. rollbackFor = Exception.class 指定发送什么异常就回滚, 这里我们指定的是Exception.class
+     *    即 只要发生了异常就回滚
+     */
+    @GlobalTransactional(name = "hspedu-save-order", rollbackFor = Exception.class)
+    public void save(Orders order) {
+
+        //后面我们如果需要打印日志
+        log.info("====创建订单 start=====");
+
+        log.info("====本地生成订单 start===");
+        orderDao.save(order);//调用本地方法生成订单order
+        log.info("====本地生成订单 end===");
+
+        log.info("====扣减库存 start===");
+        //远程调用storage微服务扣减库存
+        storageService.reduce(order.getProductId(), order.getNums());
+        log.info("====扣减库存 end===");
+
+        log.info("====扣减用户余额 start===");
+        //远程调用account微服务扣减用户money
+        accountService.reduce(order.getUserId(), order.getMoney());
+        log.info("====扣减用户余额 end===");
+
+        log.info("====本地修改订单状态 start===");
+        //调用本地方法修改订单状态0->1
+        orderDao.update(order.getUserId(), 0);
+        log.info("====本地修改订单状态 end===");
+
+        log.info("====创建订单 end=====");
+    }
+```

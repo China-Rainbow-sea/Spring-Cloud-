@@ -22,6 +22,9 @@
         <module>member-service-nacos-provider-10006</module>
         <module>member-service-nacos-consumer-80</module>
         <module>e-commerce-nacos-config-client5000</module>
+        <module>seata_storage_micro_service-10010</module>
+        <module>seata_account_micro_service-10012</module>
+        <module>seata-order-micro-service-10008</module>
     </modules>
     <!--    表明这是一个父工程,聚合管理其它模块-->
     <packaging>pom</packaging>

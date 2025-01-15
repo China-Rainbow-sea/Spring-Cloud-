@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<mapper namespace="com.rainbowsea.springcloud.dao.OrderDao">
+
+    <resultMap id="BaseResultMap" type="com.rainbowsea.springcloud.entity.Orders">
+        <id column="id" property="id" jdbcType="BIGINT"/>
+        <result column="user_id" property="userId" jdbcType="BIGINT"/>
+        <result column="product_id" property="productId" jdbcType="BIGINT"/>
+        <result column="nums" property="nums" jdbcType="INTEGER"/>
+        <result column="money" property="money" jdbcType="INTEGER"/>
+        <result column="status" property="status" jdbcType="INTEGER"/>
+    </resultMap>
+
+    <insert id="save">
+         insert into orders (id,user_id,product_id,nums,money,status)
+        values (null,#{userId},#{productId},#{nums},#{money},0);
+     </insert>
+
+    <!--配置实现save方法 添加订单 -->
+    <!--    <insert id="save">-->
+    <!--        insert into `order`(id,user_id,product_id,nums,money,status)-->
+    <!--        values (null,#{userId},#{productId},#{nums},#{money},0);-->
+    <!--    </insert>-->
+
+    <!--配置实现update- 修改订单状态 这里老师写的比较简单，实际工作中根据业务需求编写即可-->
+    <update id="update">
+        update orders set status = 1
+        where user_id=#{userId} and status = #{status};
+    </update>
+
+
+</mapper>

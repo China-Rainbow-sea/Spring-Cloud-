@@ -1,0 +1,27 @@
+server:
+  port: 10012
+spring:
+  application:
+    name: seata-account-micro-service
+  cloud:
+    alibaba:
+      seata:
+        # 指定事务组名，需要和 seata-server中的对应 /conf/file.conf 当中的匹配
+        #  vgroup_mapping.my_test_tx_group = "hspedu_order_tx_group"
+        tx-service-group: hspedu_order_tx_group
+    nacos:
+      discovery:
+        server-addr: localhost:8848 # 指定 nacos server 地址
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver # 注意: 这里我们配置的是 mysql8.0版本的
+    url: jdbc:mysql://localhost:3306/account_micro_service?characterEncoding=utf8&useSSL=false&serverTimezone=UTC&rewriteBatchedStatements=true
+    username: root
+    password: MySQL123
+# 配置 seata日志输出
+logging:
+  level:
+    io:
+      seata: info
+
+mybatis:
+  mapperLocations: classpath:mapper/*.xml

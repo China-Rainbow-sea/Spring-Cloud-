@@ -25,6 +25,12 @@
     <file url="file://$PROJECT_DIR$/member-service-provider-10000/src/main/resources" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/member-service-provider-10002/src/main/java" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/member-service-provider-10002/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata-order-micro-service-10008/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata-order-micro-service-10008/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata_account_micro_service-10012/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata_account_micro_service-10012/src/main/resources" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata_storage_micro_service-10010/src/main/java" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/seata_storage_micro_service-10010/src/main/resources" charset="UTF-8" />
     <file url="PROJECT" charset="UTF-8" />
   </component>
 </project>
